@@ -20,7 +20,7 @@ from pathlib import Path
 #page_link='file:///D:/temp/offczarek.html'
 PROGRAM_WERSJA="0.2"
 PROGRAM_DATA="11.06.2020"
-PROGRAM_NAME="Tok-Fm-Crawler"
+PROGRAM_NAME="tokfm-oymd"
 
 #database_file=r'D:\temp\tokfm\tokfm.db'
 
