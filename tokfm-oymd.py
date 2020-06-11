@@ -260,20 +260,21 @@ KATALOG_TOK_FM_PODCASTY_RESULT_DIR=KATALOG_TOK_FM_PODCASTY_BASE+"Result\\"
 
 #Dziala pod Linuxem i Windowsem
 def szukaj_na_dysku():
-    filename = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_ANDROID_FILES)
-    p1=Path(filename)
-    if not p1.exists():
+    filenameAndroid = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_ANDROID_FILES)
+    p1Android=Path(filenameAndroid)
+    if not p1Android.exists():
         print ("Brak katalogu z plikami mp3 z Androida")
         print ("Powinno to tak wygladac: "+str(p1))
         exit()
 
-    p1=Path(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
+    filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
+    p1Result=Path(filenameResult)
         
 
-    if not p1.exists():
-        os.mkdir(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
+    if not p1Result.exists():
+        os.mkdir(p1Result)
 
-    for root, dirs, files in os.walk(KATALOG_TOK_FM_PODCASTY_ANDROID_FILES):
+    for root, dirs, files in os.walk(p1Android):
         for file in files:
             if file.endswith(".mp3"):
                 CALY_PLIK_SCIEZKA=os.path.join(root, file)
@@ -317,19 +318,27 @@ def szukaj_w_bazie_i_zgraj():
             ROK_MIESIAC=DATA_AUDYCJI.strftime("%Y - %m")
             DZIEN=DATA_AUDYCJI.strftime("%d")
 
-            KATALOG=KATALOG_TOK_FM_PODCASTY_RESULT_DIR+KATALOG_PODCAST                
-            p1=Path(KATALOG)
+            KATALOG=KATALOG_TOK_FM_PODCASTY_RESULT_DIR+KATALOG_PODCAST
+            filename = PureWindowsPath(KATALOG)
+            p1=Path(filename)
+
             if not p1.exists():
                 os.mkdir(p1)            
+
+
             KATALOG=KATALOG+"\\"+ROK_MIESIAC
-            p1=Path(KATALOG)
+            
+            filename = PureWindowsPath(KATALOG)
+            p1=Path(filename)
+
             if not p1.exists():
                 os.mkdir(p1)
             FILENAME_NO_DASH=rows[2].replace('-', ' ')
             FILENAME=DZIEN+" - "+FILENAME_NO_DASH+".mp3"
                         
             KATALOG_FILENAME=KATALOG+"\\"+FILENAME
-            p1=Path(KATALOG_FILENAME)
+            filename=PureWindowsPath(KATALOG_FILENAME)
+            p1=Path(filename)
             if not p1.exists():
                 copyfile(PODCAST_FILE[i],p1)
                 print ("Skopiowano: "+str(p1))
