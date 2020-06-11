@@ -274,20 +274,21 @@ def szukaj_na_dysku():
     if not p1Result.exists():
         p1Result.mkdir()
         #os.mkdir(p1Result)
-
-    for root, dirs, files in os.walk(p1Android):
+    sep=os.sep
+    for root, dirs, files in os.walk(str(p1Android)):
         for file in files:
             if file.endswith(".mp3"):
                 CALY_PLIK_SCIEZKA=os.path.join(root, file)
-                iD_PODSCAST="\\"+CALY_PLIK_SCIEZKA.lstrip(KATALOG_TOK_FM_PODCASTY_ANDROID_FILES)
-                #Na unixy linijka
-                iD_PODSCAST=iD_PODSCAST.replace("/","\\")
+                #iD_PODSCAST="\\"+CALY_PLIK_SCIEZKA.lstrip(str(p1Android))
+                iD_PODSCAST=sep+CALY_PLIK_SCIEZKA.lstrip(str(p1Android))
                 iD_PODSCAST=iD_PODSCAST.rstrip('mp3')
-                iD_PODSCAST=iD_PODSCAST.rstrip('.')
+                iD_PODSCAST=iD_PODSCAST.rstrip('.')                
                 #trzeba 2 razy obcinac, bo za jednym razem ".mp3" zle kasuje
-                iD_PODSCAST=iD_PODSCAST.replace("\\","").lstrip("0")
-                iD_PODSCAST=iD_PODSCAST.replace("\\","")
+                iD_PODSCAST=iD_PODSCAST.replace(sep,"").lstrip("0")
+                #print (iD_PODSCAST)
+                iD_PODSCAST=iD_PODSCAST.replace(sep,"")
                 PODCAST_FILE[iD_PODSCAST]=CALY_PLIK_SCIEZKA
+                print (iD_PODSCAST)
 
 
 
