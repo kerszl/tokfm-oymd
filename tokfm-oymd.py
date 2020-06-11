@@ -272,7 +272,8 @@ def szukaj_na_dysku():
         
 
     if not p1Result.exists():
-        os.mkdir(p1Result)
+        p1Result.mkdir()
+        #os.mkdir(p1Result)
 
     for root, dirs, files in os.walk(p1Android):
         for file in files:
@@ -323,7 +324,8 @@ def szukaj_w_bazie_i_zgraj():
             p1=Path(filename)
 
             if not p1.exists():
-                os.mkdir(p1)            
+                p1.mkdir()
+                #os.mkdir(p1)            
 
 
             KATALOG=KATALOG+"\\"+ROK_MIESIAC
@@ -332,14 +334,15 @@ def szukaj_w_bazie_i_zgraj():
             p1=Path(filename)
 
             if not p1.exists():
-                os.mkdir(p1)
+                p1.mkdir()
+                #os.mkdir(p1)
             FILENAME_NO_DASH=rows[2].replace('-', ' ')
             FILENAME=DZIEN+" - "+FILENAME_NO_DASH+".mp3"
                         
             KATALOG_FILENAME=KATALOG+"\\"+FILENAME
             filename=PureWindowsPath(KATALOG_FILENAME)
             p1=Path(filename)
-            if not p1.exists():
+            if not p1.exists():                
                 copyfile(PODCAST_FILE[i],p1)
                 print ("Skopiowano: "+str(p1))
             else:
