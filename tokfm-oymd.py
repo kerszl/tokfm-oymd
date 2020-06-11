@@ -12,7 +12,7 @@ from datetime import datetime
 from shutil import copyfile
 import json
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 
 #przykladowy link
@@ -260,8 +260,8 @@ KATALOG_TOK_FM_PODCASTY_RESULT_DIR=KATALOG_TOK_FM_PODCASTY_BASE+"Result\\"
 
 #Dziala pod Linuxem i Windowsem
 def szukaj_na_dysku():
-    
-    p1=Path(KATALOG_TOK_FM_PODCASTY_ANDROID_FILES)
+    filename = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_ANDROID_FILES)
+    p1=Path(filename)
     if not p1.exists():
         print ("Brak katalogu z plikami mp3 z Androida")
         print ("Powinno to tak wygladac: "+str(p1))
