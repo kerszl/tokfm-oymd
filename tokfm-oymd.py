@@ -264,7 +264,7 @@ def szukaj_na_dysku():
     p1Android=Path(filenameAndroid)
     if not p1Android.exists():
         print ("Brak katalogu z plikami mp3 z Androida")
-        print ("Powinno to tak wygladac: "+str(p1))
+        print ("Powinno to tak wygladac: "+str(p1Android))
         exit()
 
     filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
