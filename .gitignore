@@ -1,0 +1,6 @@
+#--Ignoruj mp3
+*.mp3
+*.*bak
+*.html
+Android/
+Result/
