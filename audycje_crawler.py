@@ -14,6 +14,7 @@ import json
 import sys
 from pathlib import Path
 
+
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
