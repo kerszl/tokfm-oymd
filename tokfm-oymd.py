@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-#audycje tok-fm
+#Zgraj audycje tok-fm na swoj mp3/mp4 odtwarzacz
+#Program dziala na Linuxie i Windowsie
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from time import sleep
@@ -18,9 +19,9 @@ from pathlib import Path, PureWindowsPath
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.2"
+PROGRAM_WERSJA="0.3"
 PROGRAM_DATA="11.06.2020"
-PROGRAM_NAME="tokfm-oymd"
+PROGRAM_NAME="tokfm-on-your-mp3-device"
 
 #database_file=r'D:\temp\tokfm\tokfm.db'
 
@@ -39,7 +40,7 @@ def zaladuj_audycje_json():
         print (e)        
         exit()
     return AUDYCJE_LINK_
-#-dane linków audycji są w json
+#-dane do linków audycji są w tok-fm.json
 AUDYCJE_LINK = zaladuj_audycje_json()
 
 
@@ -174,13 +175,11 @@ class _baza():
                     (id_podcast_,name_podcast_,id_audition_,name_audition_,date_podcast_,during_podcast_,date_index_,podcast_heard_))
 
 
-
 #------update bazy ze strony-----
-#tez poprawic
 def update_bazy():
     sciezka=Path(database_file)
     if not sciezka.exists():
-        print ("nie ma pliku: "+database_file)
+        print ("Nie ma pliku: "+database_file)
         exit()
         
     
@@ -220,9 +219,7 @@ def update_bazy():
     conn.close()
 
 
-#--Zgrywanie ze strony do bazy (full)
-
-#poprawic
+#--Zgrywanie ze strony do bazy (full) Robi się tylko 1 audycje raz
 #mniej polaczen zrobic, zaktualizować
 
 def zgraj_wszystkie_audycje_do_bazy():
@@ -263,8 +260,8 @@ def szukaj_na_dysku():
     filenameAndroid = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_ANDROID_FILES)
     p1Android=Path(filenameAndroid)
     if not p1Android.exists():
-        print ("Brak katalogu z plikami mp3 z Androida")
-        print ("Powinno to tak wygladac: "+str(p1Android))
+        print ("Brak zgranego katalogu z plikami mp3 z Androida")
+        print ("Powinno to mniej wiecej tak wygladac: "+str(p1Android)+"...00.mp3")
         exit()
 
     filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
@@ -274,32 +271,21 @@ def szukaj_na_dysku():
     if not p1Result.exists():
         p1Result.mkdir()
         #os.mkdir(p1Result)
+#systemowy separator katalogow
     sep=os.sep
     for root, dirs, files in os.walk(str(p1Android)):
         for file in files:
             if file.endswith(".mp3"):
-                CALY_PLIK_SCIEZKA=os.path.join(root, file)
-                #iD_PODSCAST="\\"+CALY_PLIK_SCIEZKA.lstrip(str(p1Android))
+                CALY_PLIK_SCIEZKA=os.path.join(root, file)                
                 iD_PODSCAST=sep+CALY_PLIK_SCIEZKA.lstrip(str(p1Android))
                 iD_PODSCAST=iD_PODSCAST.rstrip('mp3')
                 iD_PODSCAST=iD_PODSCAST.rstrip('.')                
                 #trzeba 2 razy obcinac, bo za jednym razem ".mp3" zle kasuje
-                iD_PODSCAST=iD_PODSCAST.replace(sep,"").lstrip("0")
-                #print (iD_PODSCAST)
+                iD_PODSCAST=iD_PODSCAST.replace(sep,"").lstrip("0")                
                 iD_PODSCAST=iD_PODSCAST.replace(sep,"")
                 PODCAST_FILE[iD_PODSCAST]=CALY_PLIK_SCIEZKA
-                print (iD_PODSCAST)
 
 
-
-#print(PODCAST_FILE)
-#for key,value in PODCAST_FILE.items():
-#    print (key,value)
-
-#00\00\09\00\79 - fakt nie mit
-#0000090079 90079
-
-#
 #----przeszukiwanie w bazie i zgrywanie z inna nazwa do katalogu
 
 #Dziala pod Linuxem i Windowsem
@@ -344,7 +330,7 @@ def szukaj_w_bazie_i_zgraj():
             filename=PureWindowsPath(KATALOG_FILENAME)
             p1=Path(filename)
             if not p1.exists():                
-                copyfile(PODCAST_FILE[i],p1)
+                copyfile(PODCAST_FILE[i],str(p1))
                 print ("Skopiowano: "+str(p1))
             else:
                 print ("Plik istnieje: "+str(p1))
@@ -355,9 +341,6 @@ def szukaj_w_bazie_i_zgraj():
     conn.close()
 
 #-------------------------
-#poprawic baze, bez sprawdzania directory
-#update bazy sprawdzic
-#Jeszcze nazwe katalogu zmienic
 
 def DRUKUJ_NAZWE_PROGRAMU ():
     print (PROGRAM_NAME+" "+PROGRAM_WERSJA+" ("+PROGRAM_DATA+")")
@@ -373,18 +356,24 @@ def nazwa_parametru():
         PARAMETRY=cmdargs[1:]    
     return PARAMETRY
 
-#-----Poczatek
+#-----Poczatek programu
 DRUKUJ_NAZWE_PROGRAMU()
 PARAMETR_NAME=nazwa_parametru()
 
 if not PARAMETR_NAME:
-    print ("Proszę podać 1 parametr [update][search]")
+    print ("Proszę podać 1 parametr [update][search][help]\n")
+    print ("update - Aktualizuje baze podcastów")
+    print (r'search - Przeszukuje "surowe" podcasty na dysku i je porzadkuje')
+    print ("help - Wyswietla te pomoc")
+
 else:
     if PARAMETR_NAME[0] =="update":
         update_bazy()
     if PARAMETR_NAME[0] =="search":
         szukaj_na_dysku()
         szukaj_w_bazie_i_zgraj()
+#Parametr dla doswiadczonych, zgrywa wszystkie podcasty z audycji
+#
     if PARAMETR_NAME[0] =="full":
         zgraj_wszystkie_audycje_do_bazy()        
 
