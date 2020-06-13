@@ -1,0 +1,9 @@
+Jezeli audycja nie ma pelnej daty, to poprawic
+
+File "C:\Users\kerszi\AppData\Local\Programs\Python\Python38\lib\_strptime.py", line 568, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+  File "C:\Users\kerszi\AppData\Local\Programs\Python\Python38\lib\_strptime.py", line 349, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '10:00' does not match format '%d.%m.%Y %H:%M'
+
+z 93-1.mp3 - pomijac, bo ten sam plik

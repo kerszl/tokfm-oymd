@@ -14,7 +14,7 @@ from shutil import copyfile
 import json
 import sys
 from pathlib import Path, PureWindowsPath
-
+SQL_FALSE=0
 
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
@@ -160,8 +160,7 @@ class _baza():
         return self.cursorObj
     
     def insert_date(self):
-        for i in self.DANE_TOK_FM:
-            SQL_FALSE=0
+        for i in self.DANE_TOK_FM:            
             id_podcast_=i
             id_audition_=self.DANE_TOK_FM[i][0]
             name_audition_=self.DANE_TOK_FM[i][1]
@@ -254,6 +253,8 @@ PODCAST_FILE={}
 KATALOG_TOK_FM_PODCASTY_BASE=""
 KATALOG_TOK_FM_PODCASTY_ANDROID_FILES=KATALOG_TOK_FM_PODCASTY_BASE+"Android\\data\\fm.tokfm.android\\files\\"
 KATALOG_TOK_FM_PODCASTY_RESULT_DIR=KATALOG_TOK_FM_PODCASTY_BASE+"Result\\"
+KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE=KATALOG_TOK_FM_PODCASTY_RESULT_DIR+"Przesluchane\\"
+KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE=KATALOG_TOK_FM_PODCASTY_RESULT_DIR+"Nieprzesluchane\\"
 
 #Dziala pod Linuxem i Windowsem
 def szukaj_na_dysku():
@@ -264,13 +265,24 @@ def szukaj_na_dysku():
         print ("Powinno to mniej wiecej tak wygladac: "+str(p1Android)+"...00.mp3")
         exit()
 
+    #filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
     filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
     p1Result=Path(filenameResult)
+    filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE)
+    p2Result=Path(filenameResult)
+    filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE)
+    p3Result=Path(filenameResult)
         
 
     if not p1Result.exists():
         p1Result.mkdir()
-        #os.mkdir(p1Result)
+    if not p2Result.exists():
+        p2Result.mkdir()
+    if not p3Result.exists():
+        p3Result.mkdir()
+        
+    
+
 #systemowy separator katalogow
     sep=os.sep
     for root, dirs, files in os.walk(str(p1Android)):
@@ -294,7 +306,7 @@ def szukaj_w_bazie_i_zgraj():
     cur = conn.cursor()
 
     for i in PODCAST_FILE:
-        cur.execute("SELECT id_podcast, name_audition, name_podcast, date_podcast FROM tokfm where id_podcast = "+i)
+        cur.execute("SELECT id_podcast, name_audition, name_podcast, date_podcast, podcast_heard FROM tokfm where id_podcast = "+i)
         rows = cur.fetchone()
         if not rows:
             print("Nie znaleziono audycji: "+i)
@@ -305,9 +317,16 @@ def szukaj_w_bazie_i_zgraj():
             #ROK=str(DATA_AUDYCJI.year)
             ROK_MIESIAC=DATA_AUDYCJI.strftime("%Y - %m")
             DZIEN=DATA_AUDYCJI.strftime("%d")
+            
+            SQL_FALSE=0
+            if rows[4]==SQL_FALSE:
+                KAT=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE
+            else:
+                KAT=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE
 
-            KATALOG=KATALOG_TOK_FM_PODCASTY_RESULT_DIR+KATALOG_PODCAST
+            KATALOG=KAT+KATALOG_PODCAST
             filename = PureWindowsPath(KATALOG)
+            print (filename)
             p1=Path(filename)
 
             if not p1.exists():
