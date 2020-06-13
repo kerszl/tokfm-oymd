@@ -19,8 +19,8 @@ SQL_FALSE=0
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.3"
-PROGRAM_DATA="11.06.2020"
+PROGRAM_WERSJA="0.4"
+PROGRAM_DATA="14.06.2020"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
 #database_file=r'D:\temp\tokfm\tokfm.db'
