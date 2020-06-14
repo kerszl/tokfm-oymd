@@ -10,3 +10,4 @@
 
 -szuka tylko plikow \00\00\00\00\[0-9][0-9].mp3, ignoruje np 00-1.mp3
 -jezeli jest podana w audycji tylko godzina to konwertuje to nastepuje konwersja na data+godzina
+-poprawiono update (jezeli powtorka byla, to nie bylo cofania, sprawdzilem przez date)

@@ -202,7 +202,7 @@ def update_bazy():
             AUDYCJA=zgraj_strone_audycji(AUDYCJE_LINK[audycja][0],i)                        
             i+=1
             for aud in AUDYCJA:                        
-                cur.execute("SELECT id_podcast FROM tokfm where id_podcast = "+aud)
+                cur.execute("SELECT id_podcast,date_podcast FROM tokfm where id_podcast = "+aud)
                 rows = cur.fetchone()
                 if not rows:
                     print ("Update: "+AUDYCJA[aud][1]+" "+AUDYCJA[aud][4]+" "+AUDYCJA[aud][3])                     
@@ -222,8 +222,10 @@ def update_bazy():
                     conn.commit()                
                 else:
                     print ("Not update: "+AUDYCJA[aud][1]+" "+AUDYCJA[aud][4]+" "+AUDYCJA[aud][3])
-                    Update=False
-                    break
+                    #Sprawdzmy czy to powtorka, jezeli tak, cofamy sie dalej                    
+                    if AUDYCJA[aud][4]==rows[1]:
+                        Update=False
+                        break
     cur.close()
     conn.close()
 
