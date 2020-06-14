@@ -26,8 +26,8 @@ PROGRAM_NAME="tokfm-on-your-mp3-device"
 #database_file=r'D:\temp\tokfm\tokfm.db'
 
 database_file='tokfm.db'
-json_file="tok-fm.json"
-#json_file="tok-fm.jsonbak"
+#json_file="tok-fm.json"
+json_file="tok-fm.jsonbak"
 
 OFFSET_LINK="?offset="
 MAIN_LINK='https://audycje.tokfm.pl/audycja/'
@@ -106,7 +106,15 @@ def zgraj_strone_audycji (audycja_ident,nr_site):
         podcast_naglowek_rozbity=re.search("(https.*podcast/)([0-9]*)(,)(.*)",podcast_naglowek).groups()
         podcast_id=podcast_naglowek_rozbity[1]
         podcast_nazwa=podcast_naglowek_rozbity[3]        
-        data_index=datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        data_index=datetime.now().strftime("%d-%m-%Y %H:%M:%S") #zmienic kiedys na %Y-%m-%d        
+        
+        #Czasami w podcastach jest podana tylko godzina
+        #Trzeba przekonwertowac to na dzien pobrania audycji                    
+        if re.search('^[0-2][0-9]:[0-5][0-9]',podcast_data_i_czas):
+            dzis=datetime.now().strftime("%d.%m.%Y")
+            TylkoGodzina=podcast_data_i_czas
+            podcast_data_i_czas=dzis+" "+TylkoGodzina
+        
         
         if podcast_nazwa[0]=='-':
             podcast_nazwa=podcast_nazwa[1:]        
