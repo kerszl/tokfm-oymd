@@ -26,6 +26,8 @@ PROGRAM_NAME="tokfm-on-your-mp3-device"
 #database_file=r'D:\temp\tokfm\tokfm.db'
 
 database_file='tokfm.db'
+json_file="tok-fm.json"
+#json_file="tok-fm.jsonbak"
 
 OFFSET_LINK="?offset="
 MAIN_LINK='https://audycje.tokfm.pl/audycja/'
@@ -33,7 +35,7 @@ MAIN_LINK='https://audycje.tokfm.pl/audycja/'
 
 def zaladuj_audycje_json():    
     try:
-        with open('tok-fm.json', 'r') as f:
+        with open(json_file, 'r') as f:
             AUDYCJE_LINK_=json.load(f)            
     except ValueError as e:                
         print ("Problem z plikiem tok-fm.json lub formatem json")
@@ -382,17 +384,17 @@ PARAMETR_NAME=nazwa_parametru()
 if not PARAMETR_NAME:
     print ("Proszę podać 1 parametr [update][search][help]\n")
     print ("update - Aktualizuje baze podcastów")
-    print (r'search - Przeszukuje "surowe" podcasty na dysku i je porzadkuje')
+    print (r'copy - Przeszukuje "surowe" podcasty na dysku i je odpowiednio kopiuje')
     print ("help - Wyswietla te pomoc")
 
 else:
     if PARAMETR_NAME[0] =="update":
         update_bazy()
-    if PARAMETR_NAME[0] =="search":
+    if PARAMETR_NAME[0] =="copy":
         szukaj_na_dysku()
         szukaj_w_bazie_i_zgraj()
 #Parametr dla doswiadczonych, zgrywa wszystkie podcasty z audycji
-#
+#podane w pliku tok-fm.json, lub tok-fm.jsonbak
     if PARAMETR_NAME[0] =="full":
         zgraj_wszystkie_audycje_do_bazy()        
 

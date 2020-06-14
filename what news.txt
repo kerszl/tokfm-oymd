@@ -1,1 +1,10 @@
-update dodalem pare audycji
+14.06.2020
+-dodalem pare audycji
+"Andymateria"
+"Alternatywne-Fakty"
+"SexAudycja"
+"U-TOKtora":
+"Weekendowy-Poranek-Karolina-Glowacka"
+- dodalem plik tok-fm.jsonbak do tymczasowych plikow audycji
+- zamienilem parametr search na copy
+
