@@ -8,3 +8,4 @@
 - dodalem plik tok-fm.jsonbak do tymczasowych plikow audycji
 - zamienilem parametr search na copy
 
+-szuka tylko plikow \00\00\00\00\[0-9][0-9].mp3, ignoruje np 00-1.mp3

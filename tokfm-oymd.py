@@ -288,8 +288,9 @@ def szukaj_na_dysku():
 #systemowy separator katalogow
     sep=os.sep
     for root, dirs, files in os.walk(str(p1Android)):
-        for file in files:
-            if file.endswith(".mp3"):
+        for file in files:            
+            if re.search(r'^[0-9][0-9]\.mp3$', file):
+            #if file.endswith(".mp3"):
                 CALY_PLIK_SCIEZKA=os.path.join(root, file)                
                 iD_PODSCAST=sep+CALY_PLIK_SCIEZKA.lstrip(str(p1Android))
                 iD_PODSCAST=iD_PODSCAST.rstrip('mp3')
@@ -302,7 +303,7 @@ def szukaj_na_dysku():
 
 #----przeszukiwanie w bazie i zgrywanie z inna nazwa do katalogu
 
-#Dziala pod Linuxem i Windowsem
+#Przeszukiwanie dziala pod Linuxem i Windowsem
 def szukaj_w_bazie_i_zgraj():    
     conn = sqlite3.connect(database_file)
     cur = conn.cursor()
@@ -323,12 +324,17 @@ def szukaj_w_bazie_i_zgraj():
             SQL_FALSE=0
             if rows[4]==SQL_FALSE:
                 KAT=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE
+                KAT_OPOZYCYJNY=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE
             else:
                 KAT=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE
+                KAT_OPOZYCYJNY=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE
 
             KATALOG=KAT+KATALOG_PODCAST
+            KATALOG_OPOZYCYJNY=KAT_OPOZYCYJNY+KATALOG_PODCAST
             filename = PureWindowsPath(KATALOG)
-            print (filename)
+            #filename_OPOZYCYJNY=PureWindowsPath(KATALOG_OPOZYCYJNY)
+
+            #print (filename)
             p1=Path(filename)
 
             if not p1.exists():
@@ -337,8 +343,11 @@ def szukaj_w_bazie_i_zgraj():
 
 
             KATALOG=KATALOG+"\\"+ROK_MIESIAC
+            KATALOG_OPOZYCYJNY=KATALOG_OPOZYCYJNY+"\\"+ROK_MIESIAC
             
             filename = PureWindowsPath(KATALOG)
+            filename_OPOZYCYJNY = PureWindowsPath(KATALOG_OPOZYCYJNY)
+
             p1=Path(filename)
 
             if not p1.exists():
@@ -348,6 +357,7 @@ def szukaj_w_bazie_i_zgraj():
             FILENAME=DZIEN+" - "+FILENAME_NO_DASH+".mp3"
                         
             KATALOG_FILENAME=KATALOG+"\\"+FILENAME
+            KATALOG_FILENAME_OPOZYCYJNY=KATALOG_OPOZYCYJNY+"\\"+FILENAME
             filename=PureWindowsPath(KATALOG_FILENAME)
             p1=Path(filename)
             if not p1.exists():                
@@ -355,6 +365,14 @@ def szukaj_w_bazie_i_zgraj():
                 print ("Skopiowano: "+str(p1))
             else:
                 print ("Plik istnieje: "+str(p1))
+            #Kasujemy pozostalosci jezeli byl dawnym katalogu
+            filename=PureWindowsPath(KATALOG_FILENAME_OPOZYCYJNY)
+            p1=Path(filename)
+            if p1.exists():
+                p1.unlink()
+                print ("Skasowalem: "+str(p1))
+
+
             #FILENAME_SHORT=rows[2].split("-")[0:6]
             #print (FILENAME_SHORT)
      
