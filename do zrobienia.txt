@@ -6,8 +6,12 @@ File "C:\Users\kerszi\AppData\Local\Programs\Python\Python38\lib\_strptime.py", 
     raise ValueError("time data %r does not match format %r" %
 ValueError: time data '10:00' does not match format '%d.%m.%Y %H:%M'
 
+zrobione
 z 93-1.mp3 - pomijac, bo ten sam plik
 
 
 https://audycje.tokfm.pl/podcast/90530,Zydzi-uprawiajacy-ziemie-Skad-wzieli-sie-Karaimi-w-Polsce
-powtorki ignorowac przy update
+#powtorki ignorowac przy update (zrobione )
+
+
+Przesledzic wszystko i czy dobre byly udpate
