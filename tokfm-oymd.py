@@ -26,9 +26,9 @@ PROGRAM_NAME="tokfm-on-your-mp3-device"
 #database_file=r'D:\temp\tokfm\tokfm.db'
 
 database_file='tokfm.db'
-#json_file="tok-fm.json"
+json_file="tok-fm.json"
 #json_file="tok-fm.jsonbak"
-json_file="tok-fm.json_ulubione"
+#json_file="tok-fm.json_ulubione"
 
 OFFSET_LINK="?offset="
 MAIN_LINK='https://audycje.tokfm.pl/audycja/'
