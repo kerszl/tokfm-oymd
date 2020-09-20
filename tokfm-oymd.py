@@ -26,8 +26,8 @@ PROGRAM_NAME="tokfm-on-your-mp3-device"
 #database_file=r'D:\temp\tokfm\tokfm.db'
 
 database_file='tokfm.db'
-#json_file="tok-fm.json"
-json_file="tok-fm.jsonbak"
+json_file="tok-fm.json"
+#json_file="tok-fm.jsonbak"
 #json_file="tok-fm.json_ulubione"
 
 OFFSET_LINK="?offset="
@@ -264,8 +264,10 @@ def zgraj_wszystkie_audycje_do_bazy():
 #-Wrzucenie je do slownika?
 PODCAST_FILE={}
 KATALOG_TOK_FM_PODCASTY_BASE=""
-KATALOG_TOK_FM_PODCASTY_ANDROID_FILES=KATALOG_TOK_FM_PODCASTY_BASE+"Android\\data\\fm.tokfm.android\\files\\"
-KATALOG_TOK_FM_PODCASTY_RESULT_DIR=KATALOG_TOK_FM_PODCASTY_BASE+"Result\\"
+#KATALOG_TOK_FM_PODCASTY_ANDROID_FILES=KATALOG_TOK_FM_PODCASTY_BASE+"Android\\data\\fm.tokfm.android\\files\\"
+KATALOG_TOK_FM_PODCASTY_ANDROID_FILES=KATALOG_TOK_FM_PODCASTY_BASE+"e:\\audycje\\tok fm\\Android\\data\\fm.tokfm.android\\files\\"
+#KATALOG_TOK_FM_PODCASTY_RESULT_DIR=KATALOG_TOK_FM_PODCASTY_BASE+"Result\\"
+KATALOG_TOK_FM_PODCASTY_RESULT_DIR=KATALOG_TOK_FM_PODCASTY_BASE+"e:\\audycje\\tok fm\\Result\\"
 KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE=KATALOG_TOK_FM_PODCASTY_RESULT_DIR+"Przesluchane\\"
 KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE=KATALOG_TOK_FM_PODCASTY_RESULT_DIR+"Nieprzesluchane\\"
 
