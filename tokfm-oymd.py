@@ -19,8 +19,8 @@ SQL_FALSE=0
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.5"
-PROGRAM_DATA="14.06.2020"
+PROGRAM_WERSJA="0.5a"
+PROGRAM_DATA="06.10.2020"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
 #database_file=r'D:\temp\tokfm\tokfm.db'
@@ -397,6 +397,14 @@ def szukaj_w_bazie_i_zgraj():
 def DRUKUJ_NAZWE_PROGRAMU ():
     print (PROGRAM_NAME+" "+PROGRAM_WERSJA+" ("+PROGRAM_DATA+")")
 
+def WYSWIETL_POMOC ():
+    print ("Proszę podać 1 parametr [update][search][help]\n")
+    print ("update - Aktualizuje baze podcastów")
+    print (r'copy - Przeszukuje "surowe" podcasty na dysku i je odpowiednio kopiuje')
+    print ("help - Wyswietla te pomoc")
+
+
+
 def nazwa_parametru():
     #PARAMETRY=[]
     total = len(sys.argv)
@@ -413,17 +421,16 @@ DRUKUJ_NAZWE_PROGRAMU()
 PARAMETR_NAME=nazwa_parametru()
 
 if not PARAMETR_NAME:
-    print ("Proszę podać 1 parametr [update][search][help]\n")
-    print ("update - Aktualizuje baze podcastów")
-    print (r'copy - Przeszukuje "surowe" podcasty na dysku i je odpowiednio kopiuje')
-    print ("help - Wyswietla te pomoc")
-
+    WYSWIETL_POMOC()
 else:
     if PARAMETR_NAME[0] =="update":
         update_bazy()
     if PARAMETR_NAME[0] =="copy":
         szukaj_na_dysku()
         szukaj_w_bazie_i_zgraj()
+    if PARAMETR_NAME[0] =="help":
+        WYSWIETL_POMOC()
+        
 #Parametr dla doswiadczonych, zgrywa wszystkie podcasty z audycji
 #podane w pliku tok-fm.json, lub tok-fm.jsonbak
     if PARAMETR_NAME[0] =="full":
