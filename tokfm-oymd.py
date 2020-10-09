@@ -1,6 +1,10 @@
 #!/usr/bin/python3
-#Zgraj audycje tok-fm na swoj mp3/mp4 odtwarzacz
+#Zgraj audycje Tok-fm na swoj mp3/mp4 odtwarzacz z urządzenia Android.
+#------------------------
 #Program dziala na Linuxie i Windowsie
+#Autor Szikers
+#Licencja typu Freeware albo co tam chcecie ;)
+
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from time import sleep
@@ -20,8 +24,8 @@ sep=os.sep
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.5a"
-PROGRAM_DATA="06.10.2020"
+PROGRAM_WERSJA="0.7"
+PROGRAM_DATA="10.10.2020"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
 #database_file=r'D:\temp\tokfm\tokfm.db'
@@ -29,8 +33,6 @@ PROGRAM_NAME="tokfm-on-your-mp3-device"
 database_file='tokfm.db'
 json_file="tok-fm-full.json"
 json_file_fav="tok-fm-fav.json"
-#json_file="tok-fm.jsonbak"
-#json_file="tok-fm.json_ulubione"
 
 OFFSET_LINK="?offset="
 MAIN_LINK='https://audycje.tokfm.pl/audycja/'
@@ -48,16 +50,6 @@ def zaladuj_audycje_json(plik):
 #-dane do linków audycji są w tok-fm.json
 
 AUDYCJE_LINK = zaladuj_audycje_json(json_file)
-
-for i,j in enumerate(AUDYCJE_LINK):
-    print (i,j)
-
-AUDYCJE_LINK = zaladuj_audycje_json(json_file_fav)    
-for i,j in enumerate(AUDYCJE_LINK):
-    print (i,j)
-
-exit ()
-
 
 
 def max_ilosc_stron(audycja_ident):
@@ -200,7 +192,7 @@ class _baza():
 #------update bazy ze strony-----
 def update_bazy():
 
-#Updatuje tylko
+#Updatuje tylko ulubione audycje
     AUDYCJE_LINK = zaladuj_audycje_json(json_file_fav)
 
 
@@ -246,6 +238,7 @@ def update_bazy():
                         break
     cur.close()
     conn.close()
+    AUDYCJE_LINK = zaladuj_audycje_json(json_file)
 
 
 #--Zgrywanie ze strony do bazy (full) Robi się tylko 1 audycje raz
@@ -271,9 +264,6 @@ def zgraj_wszystkie_audycje_do_bazy():
                 baza.conn.close()
             else:
                     print("Błąd! Nie mogę się połączyć!")
-
-
-
 
 
 
@@ -330,6 +320,8 @@ def szukaj_na_dysku():
                 PODCAST_FILE[iD_PODSCAST]=CALY_PLIK_SCIEZKA
 
 #----przeszukiwanie w bazie i sprawdzanie czy audycja przesluchana czy nie
+#----jezeli jest inaczej niz trzeba to przerzuca sie ja automatycznie
+
 def szukaj_w_bazie_i_katalogu(KATALOG_Z,KATALOG_DO):    
 
     conn = sqlite3.connect(database_file)
@@ -347,34 +339,38 @@ def szukaj_w_bazie_i_katalogu(KATALOG_Z,KATALOG_DO):
         podcast_heard_val="0"
     else:
         podcast_heard_val="1"
-            
     
-
-
+    Ilosc_przenosin=0        
 #Porzadek w katalogu "NIE/PRZESLUCHANE" - uwaga zmienia sie zaleznosc
     for root, dirs, files in os.walk(str(KAT_PRZESLUCHANE_)):
         for file in files:                                    
-            if re.search(r'^[0-3][0-9] - .*.mp3$', file):            
+            if re.search(r'^[0-3][0-9] - [0-9A-Za-z ]*.mp3$', file):            
                 CALY_PLIK_SCIEZKA=os.path.join(root, file)                
                 #lstrip zle dziala!!!
                 KAT_P2_=CALY_PLIK_SCIEZKA.replace(KAT_PRZESLUCHANE_,"",1)
+
+
+                #KAT_P2=re.search("([a-z A-Z0-9.-]*).([0-9 -]*).([0-3][0-9] - *)([0-9a-z A-Z]*)(\.mp3)",KAT_P2_).groups()
+                KAT_P2=re.search("([a-z A-Z0-9.-]*).([0-9 -]*).([0-3][0-9] - *)([0-9a-zA-Z ]*)",KAT_P2_).groups()
                 
-                print (CALY_PLIK_SCIEZKA)
-                                
-                KAT_P2=re.search("([a-z A-Z0-9.-]*).([0-9 -]*).([0-3][0-9] - *)([0-9a-zA-Z].*)(\.mp3)",KAT_P2_).groups()
+                
+
+                
 
                 KAT_P2_NAME_AUD_DB=""
                 for i in AUDYCJE_LINK:
                     if AUDYCJE_LINK[i][1].lower()==KAT_P2[0].strip().lower():
                         KAT_P2_NAME_AUD_DB=i                        
+                if not KAT_P2_NAME_AUD_DB:
+                    print ("Blad w nazwie katalogu:",r'"'+KAT_P2[0]+r'"')
+                    exit ()
                 
-                
+
                 KAT_P2_NAME_DATE_DB_=KAT_P2[1]+"-"+KAT_P2[2].rstrip("- ")                                
                 KAT_P2_NAME_DATE_DB=datetime.strptime(KAT_P2_NAME_DATE_DB_,"%Y - %m-%d").strftime("%d.%m.%Y")
                 KAT_P2_NAME_POD_DB=KAT_P2[3].replace(" ","-")
-                ROK_MIESIAC=datetime.strptime(KAT_P2_NAME_DATE_DB,"%d.%m.%Y").strftime("%Y - %m")                            
-                KAT_NIEPRZESLUCHANE_AUDYCJA=KAT_NIEPRZESLUCHANE_+AUDYCJE_LINK[KAT_P2_NAME_AUD_DB][1]
-                                
+                ROK_MIESIAC=datetime.strptime(KAT_P2_NAME_DATE_DB,"%d.%m.%Y").strftime("%Y - %m")      
+                KAT_NIEPRZESLUCHANE_AUDYCJA=KAT_NIEPRZESLUCHANE_+AUDYCJE_LINK[KAT_P2_NAME_AUD_DB][1]                                                
                 KAT_NIEPRZESLUCHANE_AUDYCJA_DATA=KAT_NIEPRZESLUCHANE_AUDYCJA+sep+ROK_MIESIAC                
                 KATALOGI_NIEPRZESLUCHANE=[KAT_NIEPRZESLUCHANE_,KAT_NIEPRZESLUCHANE_AUDYCJA,KAT_NIEPRZESLUCHANE_AUDYCJA_DATA]
                 
@@ -393,9 +389,14 @@ def szukaj_w_bazie_i_katalogu(KATALOG_Z,KATALOG_DO):
                             Path(filenameResult).mkdir()                    
                     movefile (CALY_PLIK_SCIEZKA,KAT_NIEPRZESLUCHANE_AUDYCJA_DATA)
                     print ("Przenioslem \""+file+"\" do "+KAT_NIEPRZESLUCHANE_AUDYCJA_DATA+sep)
+                    Ilosc_przenosin+=1
+                
+                    
+
                 
     cur.close()
     conn.close()
+    print ("Ilosc przenosin:",Ilosc_przenosin)
     
 
 #----przeszukiwanie w bazie i zgrywanie z inna nazwa do katalogu
@@ -483,9 +484,10 @@ def DRUKUJ_NAZWE_PROGRAMU ():
     print (PROGRAM_NAME+" "+PROGRAM_WERSJA+" ("+PROGRAM_DATA+")")
 
 def WYSWIETL_POMOC ():
-    print ("Proszę podać 1 parametr [update][search][help]\n")
+    print ("Proszę podać 1 parametr [update][search][help][check]\n")
     print ("update - Aktualizuje baze podcastów")
     print (r'copy - Przeszukuje "surowe" podcasty na dysku i je odpowiednio kopiuje')
+    print ("check - Przenosi audycje wg bazy do przesluchane lub nie")
     print ("help - Wyswietla te pomoc")
 
 
@@ -516,6 +518,11 @@ else:
     if PARAMETR_NAME[0] =="help":
         WYSWIETL_POMOC()
     if PARAMETR_NAME[0] =="check":
+        print ("Sprawdzam w podkasty: Przesluchane")
+        szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE)
+        print ("Sprawdzam w podkasty: NiePrzesluchane")
+        szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE)
+
 #przeszukaj baze i porownaj czy jest dobrze z plikami
 #dodac to do copy
         pass
@@ -530,8 +537,6 @@ else:
 
 
 
-#szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE)
-szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE)
 
     
     
