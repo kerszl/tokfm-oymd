@@ -10,11 +10,12 @@ import sqlite3
 from sqlite3 import Error
 from random import randrange
 from datetime import datetime
-from shutil import copyfile
+from shutil import copyfile,move as movefile
 import json
 import sys
 from pathlib import Path, PureWindowsPath
 SQL_FALSE=0
+sep=os.sep
 
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
@@ -26,7 +27,8 @@ PROGRAM_NAME="tokfm-on-your-mp3-device"
 #database_file=r'D:\temp\tokfm\tokfm.db'
 
 database_file='tokfm.db'
-json_file="tok-fm.json"
+json_file="tok-fm-full.json"
+json_file_fav="tok-fm-fav.json"
 #json_file="tok-fm.jsonbak"
 #json_file="tok-fm.json_ulubione"
 
@@ -34,17 +36,27 @@ OFFSET_LINK="?offset="
 MAIN_LINK='https://audycje.tokfm.pl/audycja/'
 
 
-def zaladuj_audycje_json():    
+def zaladuj_audycje_json(plik):    
     try:
-        with open(json_file, 'r') as f:
+        with open(plik, 'r') as f:
             AUDYCJE_LINK_=json.load(f)            
     except ValueError as e:                
-        print ("Problem z plikiem tok-fm.json lub formatem json")
+        print ("Problem z plikiem "+plik+" lub formatem json")
         print (e)        
         exit()
     return AUDYCJE_LINK_
 #-dane do linków audycji są w tok-fm.json
-AUDYCJE_LINK = zaladuj_audycje_json()
+
+AUDYCJE_LINK = zaladuj_audycje_json(json_file)
+
+for i,j in enumerate(AUDYCJE_LINK):
+    print (i,j)
+
+AUDYCJE_LINK = zaladuj_audycje_json(json_file_fav)    
+for i,j in enumerate(AUDYCJE_LINK):
+    print (i,j)
+
+exit ()
 
 
 
@@ -187,6 +199,11 @@ class _baza():
 
 #------update bazy ze strony-----
 def update_bazy():
+
+#Updatuje tylko
+    AUDYCJE_LINK = zaladuj_audycje_json(json_file_fav)
+
+
     sciezka=Path(database_file)
     if not sciezka.exists():
         print ("Nie ma pliku: "+database_file)
@@ -279,8 +296,7 @@ def szukaj_na_dysku():
         print ("Brak zgranego katalogu z plikami mp3 z Androida")
         print ("Powinno to mniej wiecej tak wygladac: "+str(p1Android)+"...00.mp3")
         exit()
-
-    #filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
+    
     filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
     p1Result=Path(filenameResult)
     filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE)
@@ -299,7 +315,7 @@ def szukaj_na_dysku():
     
 
 #systemowy separator katalogow
-    sep=os.sep
+    #sep=os.sep
     for root, dirs, files in os.walk(str(p1Android)):
         for file in files:            
             if re.search(r'^[0-9][0-9]\.mp3$', file):
@@ -313,11 +329,80 @@ def szukaj_na_dysku():
                 iD_PODSCAST=iD_PODSCAST.replace(sep,"")
                 PODCAST_FILE[iD_PODSCAST]=CALY_PLIK_SCIEZKA
 
+#----przeszukiwanie w bazie i sprawdzanie czy audycja przesluchana czy nie
+def szukaj_w_bazie_i_katalogu(KATALOG_Z,KATALOG_DO):    
+
+    conn = sqlite3.connect(database_file)
+    cur = conn.cursor()
+
+    KAT_PRZESLUCHANE=PureWindowsPath(KATALOG_Z)
+    KAT_PRZESLUCHANE_=str(KAT_PRZESLUCHANE)+str(sep)
+
+    KAT_NIEPRZESLUCHANE=PureWindowsPath(KATALOG_DO)
+    KAT_NIEPRZESLUCHANE_=str(KAT_NIEPRZESLUCHANE)+str(sep)
+
+    podcast_heard_val=0
+
+    if (KATALOG_Z==KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE):
+        podcast_heard_val="0"
+    else:
+        podcast_heard_val="1"
+            
+    
+
+
+#Porzadek w katalogu "NIE/PRZESLUCHANE" - uwaga zmienia sie zaleznosc
+    for root, dirs, files in os.walk(str(KAT_PRZESLUCHANE_)):
+        for file in files:                                    
+            if re.search(r'^[0-3][0-9] - .*.mp3$', file):            
+                CALY_PLIK_SCIEZKA=os.path.join(root, file)                
+                #lstrip zle dziala!!!
+                KAT_P2_=CALY_PLIK_SCIEZKA.replace(KAT_PRZESLUCHANE_,"",1)
+                
+                print (CALY_PLIK_SCIEZKA)
+                                
+                KAT_P2=re.search("([a-z A-Z0-9.-]*).([0-9 -]*).([0-3][0-9] - *)([0-9a-zA-Z].*)(\.mp3)",KAT_P2_).groups()
+
+                KAT_P2_NAME_AUD_DB=""
+                for i in AUDYCJE_LINK:
+                    if AUDYCJE_LINK[i][1].lower()==KAT_P2[0].strip().lower():
+                        KAT_P2_NAME_AUD_DB=i                        
+                
+                
+                KAT_P2_NAME_DATE_DB_=KAT_P2[1]+"-"+KAT_P2[2].rstrip("- ")                                
+                KAT_P2_NAME_DATE_DB=datetime.strptime(KAT_P2_NAME_DATE_DB_,"%Y - %m-%d").strftime("%d.%m.%Y")
+                KAT_P2_NAME_POD_DB=KAT_P2[3].replace(" ","-")
+                ROK_MIESIAC=datetime.strptime(KAT_P2_NAME_DATE_DB,"%d.%m.%Y").strftime("%Y - %m")                            
+                KAT_NIEPRZESLUCHANE_AUDYCJA=KAT_NIEPRZESLUCHANE_+AUDYCJE_LINK[KAT_P2_NAME_AUD_DB][1]
+                                
+                KAT_NIEPRZESLUCHANE_AUDYCJA_DATA=KAT_NIEPRZESLUCHANE_AUDYCJA+sep+ROK_MIESIAC                
+                KATALOGI_NIEPRZESLUCHANE=[KAT_NIEPRZESLUCHANE_,KAT_NIEPRZESLUCHANE_AUDYCJA,KAT_NIEPRZESLUCHANE_AUDYCJA_DATA]
+                
+                if KAT_P2_NAME_AUD_DB:                                    
+                    cur.execute("SELECT name_audition, date_podcast, name_podcast FROM tokfm WHERE name_audition LIKE "
+                    +"'%"+KAT_P2_NAME_AUD_DB+"%'"\
+                    +" AND date_podcast LIKE "+"'%"+KAT_P2_NAME_DATE_DB+"%'"\
+                    +" AND name_podcast LIKE "+"'%"+KAT_P2_NAME_POD_DB+"%'"\
+                    +" AND podcast_heard = "+podcast_heard_val\
+                    )                
+                rows = cur.fetchone()
+                if rows:                    
+                    for katalog in KATALOGI_NIEPRZESLUCHANE:
+                        filenameResult = PureWindowsPath(katalog)                        
+                        if not Path(filenameResult).exists():                      
+                            Path(filenameResult).mkdir()                    
+                    movefile (CALY_PLIK_SCIEZKA,KAT_NIEPRZESLUCHANE_AUDYCJA_DATA)
+                    print ("Przenioslem \""+file+"\" do "+KAT_NIEPRZESLUCHANE_AUDYCJA_DATA+sep)
+                
+    cur.close()
+    conn.close()
+    
 
 #----przeszukiwanie w bazie i zgrywanie z inna nazwa do katalogu
 
+
 #Przeszukiwanie dziala pod Linuxem i Windowsem
-def szukaj_w_bazie_i_zgraj():    
+def szukaj_w_bazie_i_zgraj():
     conn = sqlite3.connect(database_file)
     cur = conn.cursor()
 
@@ -416,7 +501,7 @@ def nazwa_parametru():
         PARAMETRY=cmdargs[1:]    
     return PARAMETRY
 
-#-----Poczatek programu
+#-----Poczatek programu----
 DRUKUJ_NAZWE_PROGRAMU()
 PARAMETR_NAME=nazwa_parametru()
 
@@ -430,13 +515,23 @@ else:
         szukaj_w_bazie_i_zgraj()
     if PARAMETR_NAME[0] =="help":
         WYSWIETL_POMOC()
-        
+    if PARAMETR_NAME[0] =="check":
+#przeszukaj baze i porownaj czy jest dobrze z plikami
+#dodac to do copy
+        pass
 #Parametr dla doswiadczonych, zgrywa wszystkie podcasty z audycji
 #podane w pliku tok-fm.json, lub tok-fm.jsonbak
     if PARAMETR_NAME[0] =="full":
         zgraj_wszystkie_audycje_do_bazy()        
 
+#---tu kod pomocniczy
+#szukaj_na_dysku()
+#print (PODCAST_FILE)
 
+
+
+#szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE)
+szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE)
 
     
     
