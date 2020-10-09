@@ -1,8 +1,10 @@
 # tokfm-oymd
-tokfm-on-your-mp3-device
-Audycje tok fm można zgrać sobie na androida, problem jest wtedy, kiedy chcemy
-te pliki zgrać na przenośny odtwarzacz. Mamy jakieś dziwne numery w mp3-kach.
-Ta aplikacja pozwala zgrać ze strony audycje tok fm przy tym zmieniając nazwę audycji
-na poprawną.
+Zgraj audycje Tok-fm na swoj mp3/mp4 odtwarzacz z urządzenia Android.
+
+Aplikacja kopiuje nieczytelne nazwy audycji TOK-FM z urządzenia Androida na Twój dysk i ładnie
+je segreguje oraz nadaje nazwy. Jest mozliwość ściągniecia bazy podcastów na swój dysk.
+Podcasty możesz oznaczyć, jako przesłuchane lub jako nie.
+
+
 
 Działa na Linuxie i Windowsie
