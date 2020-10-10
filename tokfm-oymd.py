@@ -24,7 +24,7 @@ sep=os.sep
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.7"
+PROGRAM_WERSJA="0.7a"
 PROGRAM_DATA="10.10.2020"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
@@ -194,6 +194,8 @@ def update_bazy():
 
 #Updatuje tylko ulubione audycje
     AUDYCJE_LINK = zaladuj_audycje_json(json_file_fav)
+    
+    nowe_audycje_licznik=0
 
 
     sciezka=Path(database_file)
@@ -230,6 +232,7 @@ def update_bazy():
                             date_podcast,during_podcast,date_index,podcast_heard) VALUES(?,?,?,?,?,?,?,?)",\
                             (id_podcast_,name_podcast_,id_audition_,name_audition_,date_podcast_,during_podcast_,date_index_,podcast_heard_))
                     conn.commit()                
+                    nowe_audycje_licznik+=1
                 else:
                     print ("Not update: "+AUDYCJA[aud][1]+" "+AUDYCJA[aud][4]+" "+AUDYCJA[aud][3])
                     #Sprawdzmy czy to powtorka, jezeli tak, cofamy sie dalej                    
@@ -239,6 +242,7 @@ def update_bazy():
     cur.close()
     conn.close()
     AUDYCJE_LINK = zaladuj_audycje_json(json_file)
+    print ("Nowe audycje:",nowe_audycje_licznik)
 
 
 #--Zgrywanie ze strony do bazy (full) Robi się tylko 1 audycje raz
