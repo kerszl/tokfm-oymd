@@ -24,8 +24,8 @@ sep=os.sep
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.7a"
-PROGRAM_DATA="10.10.2020"
+PROGRAM_WERSJA="0.8"
+PROGRAM_DATA="15.10.2020"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
 #database_file=r'D:\temp\tokfm\tokfm.db'
@@ -407,6 +407,45 @@ def szukaj_w_bazie_i_katalogu(KATALOG_Z,KATALOG_DO):
 
 
 #Przeszukiwanie dziala pod Linuxem i Windowsem
+def SZUKAJ (PARAMETRY):
+    conn = sqlite3.connect(database_file)
+    cur = conn.cursor()
+    #+aud
+    #PARAMETRY="+aud off +data   2020    "
+    #Usun biale znaki
+    
+    #PAR=re.sub("\s+"," ",PARAMETRY)
+    AUD=""; DATA=""
+
+    if re.search("\+aud",PARAMETRY):
+        AUD=re.search("(\+aud) (\S*)",PARAMETRY).groups()[1]
+
+    if re.search("\+data",PARAMETRY):
+        DATA=re.search("(\+data) (\S*)",PARAMETRY).groups()[1]
+    
+    if not AUD and not DATA:
+        print ("Parametry to +aud (audycja) lub/i +data (data)")
+        return
+        
+
+
+
+    cur.execute("SELECT date_podcast, name_audition,  name_podcast FROM tokfm WHERE name_audition LIKE "
+    +"'%"+AUD+"%'"\
+    +" AND date_podcast LIKE "+"'%"+DATA+"%'"\
+    +" LIMIT 9"\
+    )                
+    #rows = cur.fetchone()
+    rows = cur.fetchall()
+    if rows:
+        for j,i in enumerate(rows,1):
+            print (str(j)+".",i[0],"|",AUDYCJE_LINK [i[1]][1],"|",str(i[2]).replace("-"," "))
+
+
+    cur.close()
+    conn.close()
+
+
 def szukaj_w_bazie_i_zgraj():
     conn = sqlite3.connect(database_file)
     cur = conn.cursor()
@@ -488,10 +527,11 @@ def DRUKUJ_NAZWE_PROGRAMU ():
     print (PROGRAM_NAME+" "+PROGRAM_WERSJA+" ("+PROGRAM_DATA+")")
 
 def WYSWIETL_POMOC ():
-    print ("Proszę podać 1 parametr [update][search][help][check]\n")
+    print ("Proszę podać parametr \n")
     print ("update - Aktualizuje baze podcastów")
     print (r'copy - Przeszukuje "surowe" podcasty na dysku i je odpowiednio kopiuje')
-    print ("check - Przenosi audycje wg bazy do przesluchane lub nie")
+    print ("fix - Przenosi audycje wg bazy do przesluchane lub nie")
+    print ("search - Szuka podcastów")
     print ("help - Wyswietla te pomoc")
 
 
@@ -501,7 +541,7 @@ def nazwa_parametru():
     total = len(sys.argv)
     cmdargs = sys.argv
 
-    if total != 2:                    
+    if total < 2:                    
         PARAMETRY=""
     else:
         PARAMETRY=cmdargs[1:]    
@@ -519,17 +559,17 @@ else:
     if PARAMETR_NAME[0] =="copy":
         szukaj_na_dysku()
         szukaj_w_bazie_i_zgraj()
+    if PARAMETR_NAME[0] =="search":
+        SZUKAJ(" ".join(PARAMETR_NAME))        
+        
     if PARAMETR_NAME[0] =="help":
         WYSWIETL_POMOC()
-    if PARAMETR_NAME[0] =="check":
+    if PARAMETR_NAME[0] =="fix":
         print ("Sprawdzam w podkasty: Przesluchane")
         szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE)
         print ("Sprawdzam w podkasty: NiePrzesluchane")
         szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE)
 
-#przeszukaj baze i porownaj czy jest dobrze z plikami
-#dodac to do copy
-        pass
 #Parametr dla doswiadczonych, zgrywa wszystkie podcasty z audycji
 #podane w pliku tok-fm.json, lub tok-fm.jsonbak
     if PARAMETR_NAME[0] =="full":
@@ -538,7 +578,7 @@ else:
 #---tu kod pomocniczy
 #szukaj_na_dysku()
 #print (PODCAST_FILE)
-
+#SZUKAJ("+aud off  +aud aa    +data   2020    ")
 
 
 
