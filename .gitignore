@@ -2,3 +2,5 @@
 *.mp3
 *.*bak
 *.html
+tokfm_old.db
+test_funkcji.py

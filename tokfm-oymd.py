@@ -24,8 +24,8 @@ sep=os.sep
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.8"
-PROGRAM_DATA="15.10.2020"
+PROGRAM_WERSJA="0.9"
+PROGRAM_DATA="31.10.2020"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
 #database_file=r'D:\temp\tokfm\tokfm.db'
@@ -100,6 +100,15 @@ def zgraj_strone_audycji (audycja_ident,nr_site):
 
     for i,fragment_strony in enumerate(audycje_metadane):
         podcast_data_i_czas=fragment_strony.find('div',class_=DIG_CLASS_ID).find('span').text.strip()
+        w_studio=fragment_strony.find('span',class_=TRWANIE_AUDYCJI_CLASS_ID).findNext('span').findAll('a')
+        podcast_gosc=""
+        if w_studio:        
+            for j,gosc_baza in enumerate(w_studio):
+                if j>0:
+                    podcast_gosc=podcast_gosc+', '
+                podcast_gosc=podcast_gosc+gosc_baza.text.replace(',','').replace('\t','').replace('\n',' ').strip()                     
+        else:
+            podcast_gosc="Brak"
         audycja_opis=fragment_strony.find('div',class_=DIG_CLASS_ID).find('a').text
         audycja_short_link=fragment_strony.find('div',class_=DIG_CLASS_ID).find('a').attrs['href']
         audycja_short_link=audycja_short_link.replace(MAIN_LINK,"")
@@ -126,7 +135,7 @@ def zgraj_strone_audycji (audycja_ident,nr_site):
         AUDYCJA[podcast_id]=[audycja_id,audycja_nazwa,audycja_opis,\
                               podcast_nazwa,\
                               podcast_data_i_czas,podcast_trwanie,\
-                              data_index,\
+                              data_index,podcast_gosc,\
                                 ]        
     sleep (czekaj)
     return AUDYCJA
@@ -140,11 +149,12 @@ class _baza():
                                         id_podcast integer PRIMARY KEY,
                                         name_podcast text NOT NULL,
                                         id_audition integer NOT NULL,
-                                        name_audition text NOT NULL,                                        
+                                        name_audition text NOT NULL,                                                                                
                                         date_podcast date NOT NULL,
                                         during_podcast time NOT NULL,                                        
                                         date_index date NOT NULL,
-                                        podcast_heard interger                                        
+                                        podcast_heard interger,
+                                        guest_podcast text NOT NULL                                        
                                     ); """
     
     conn = None
@@ -184,9 +194,10 @@ class _baza():
             during_podcast_=self.DANE_TOK_FM[i][5]
             date_index_=self.DANE_TOK_FM[i][6]
             podcast_heard_=SQL_FALSE
+            guest_podcast_=self.DANE_TOK_FM[i][7]
             self.cursorObj.execute("INSERT OR IGNORE INTO tokfm (id_podcast,name_podcast,id_audition,name_audition,\
-                    date_podcast,during_podcast,date_index,podcast_heard) VALUES(?,?,?,?,?,?,?,?)",\
-                    (id_podcast_,name_podcast_,id_audition_,name_audition_,date_podcast_,during_podcast_,date_index_,podcast_heard_))
+                    date_podcast,during_podcast,date_index,podcast_heard,guest_podcast) VALUES(?,?,?,?,?,?,?,?,?)",\
+                    (id_podcast_,name_podcast_,id_audition_,name_audition_,date_podcast_,during_podcast_,date_index_,podcast_heard_,guest_podcast_))
 
 
 #------update bazy ze strony-----
@@ -227,10 +238,11 @@ def update_bazy():
                     during_podcast_=AUDYCJA[aud][5]
                     date_index_=AUDYCJA[aud][6]
                     podcast_heard_=SQL_FALSE
+                    guest_podcast_=AUDYCJA[aud][7]
                     #cur.execute("INSERT OR IGNORE INTO tokfm (id_podcast,name_podcast,id_audition,name_audition,
                     cur.execute("INSERT OR IGNORE INTO tokfm (id_podcast,name_podcast,id_audition,name_audition,\
-                            date_podcast,during_podcast,date_index,podcast_heard) VALUES(?,?,?,?,?,?,?,?)",\
-                            (id_podcast_,name_podcast_,id_audition_,name_audition_,date_podcast_,during_podcast_,date_index_,podcast_heard_))
+                            date_podcast,during_podcast,date_index,podcast_heard,guest_podcast) VALUES(?,?,?,?,?,?,?,?,?)",\
+                            (id_podcast_,name_podcast_,id_audition_,name_audition_,date_podcast_,during_podcast_,date_index_,podcast_heard_,guest_podcast_))
                     conn.commit()                
                     nowe_audycje_licznik+=1
                 else:
@@ -411,35 +423,38 @@ def SZUKAJ (PARAMETRY):
     conn = sqlite3.connect(database_file)
     cur = conn.cursor()
     #+aud
-    #PARAMETRY="+aud off +data   2020    "
-    #Usun biale znaki
-    
+    #PARAMETRY="+aud off +date   2020    "
+    #Usun biale znaki    
     #PAR=re.sub("\s+"," ",PARAMETRY)
-    AUD=""; DATA=""
+    AUD=""; DATE=""; GUEST=""
 
     if re.search("\+aud",PARAMETRY):
         AUD=re.search("(\+aud) (\S*)",PARAMETRY).groups()[1]
 
-    if re.search("\+data",PARAMETRY):
-        DATA=re.search("(\+data) (\S*)",PARAMETRY).groups()[1]
+    if re.search("\+date",PARAMETRY):
+        DATE=re.search("(\+date) (\S*)",PARAMETRY).groups()[1]
     
-    if not AUD and not DATA:
-        print ("Parametry to +aud (audycja) lub/i +data (data)")
+    if re.search("\+guest",PARAMETRY):
+        GUEST=re.search("(\+guest) (\S*)",PARAMETRY).groups()[1]
+    
+    if not AUD and not DATE and not GUEST:
+        print ("Parametry to +aud (audycja) lub/i +date (data)")
         return
         
 
 
 
-    cur.execute("SELECT date_podcast, name_audition,  name_podcast FROM tokfm WHERE name_audition LIKE "
+    cur.execute("SELECT date_podcast, name_audition,  name_podcast, guest_podcast FROM tokfm WHERE name_audition LIKE "
     +"'%"+AUD+"%'"\
-    +" AND date_podcast LIKE "+"'%"+DATA+"%'"\
+    +" AND date_podcast LIKE "+"'%"+DATE+"%'"\
+    +" AND guest_podcast LIKE "+"'%"+GUEST+"%'"\
     +" LIMIT 9"\
     )                
     #rows = cur.fetchone()
     rows = cur.fetchall()
-    if rows:
+    if rows:        
         for j,i in enumerate(rows,1):
-            print (str(j)+".",i[0],"|",AUDYCJE_LINK [i[1]][1],"|",str(i[2]).replace("-"," "))
+            print (str(j)+".",i[0],"|",AUDYCJE_LINK [i[1]][1],"|",str(i[2]).replace("-"," "),"|",i[3])
 
 
     cur.close()
