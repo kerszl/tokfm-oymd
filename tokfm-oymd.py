@@ -24,7 +24,7 @@ sep=os.sep
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.9"
+PROGRAM_WERSJA="0.9a"
 PROGRAM_DATA="31.10.2020"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
@@ -32,6 +32,7 @@ PROGRAM_NAME="tokfm-on-your-mp3-device"
 
 database_file='tokfm.db'
 json_file="tok-fm-full.json"
+#json_file="tok-fm-full_temp.json"
 json_file_fav="tok-fm-fav.json"
 
 OFFSET_LINK="?offset="
@@ -101,6 +102,11 @@ def zgraj_strone_audycji (audycja_ident,nr_site):
     for i,fragment_strony in enumerate(audycje_metadane):
         podcast_data_i_czas=fragment_strony.find('div',class_=DIG_CLASS_ID).find('span').text.strip()
         w_studio=fragment_strony.find('span',class_=TRWANIE_AUDYCJI_CLASS_ID).findNext('span').findAll('a')
+        w_studio=fragment_strony.find('span',class_=TRWANIE_AUDYCJI_CLASS_ID).findNext('span')
+        if w_studio.find('a'):
+            w_studio=w_studio.findAll('a')
+        else:
+            w_studio=w_studio.findNext('span').findAll('a')
         podcast_gosc=""
         if w_studio:        
             for j,gosc_baza in enumerate(w_studio):
@@ -420,45 +426,49 @@ def szukaj_w_bazie_i_katalogu(KATALOG_Z,KATALOG_DO):
 
 #Przeszukiwanie dziala pod Linuxem i Windowsem
 def SZUKAJ (PARAMETRY):
-    conn = sqlite3.connect(database_file)
-    cur = conn.cursor()
+    
     #+aud
     #PARAMETRY="+aud off +date   2020    "
     #Usun biale znaki    
     #PAR=re.sub("\s+"," ",PARAMETRY)
-    AUD=""; DATE=""; GUEST=""
+    PARAM_NAME={'AUD':"",'DATE':"",'GUEST':""}
+    NO_PAR=True
+    
 
-    if re.search("\+aud",PARAMETRY):
-        AUD=re.search("(\+aud) (\S*)",PARAMETRY).groups()[1]
+    if re.search("\+aud",PARAMETRY):        
+        PARAM_NAME['AUD']=re.search("(\+aud) (\S*)",PARAMETRY).groups()[1]
+        NO_PAR=False
 
     if re.search("\+date",PARAMETRY):
-        DATE=re.search("(\+date) (\S*)",PARAMETRY).groups()[1]
+        PARAM_NAME['DATE']=re.search("(\+date) (\S*)",PARAMETRY).groups()[1]
+        NO_PAR=False
     
     if re.search("\+guest",PARAMETRY):
-        GUEST=re.search("(\+guest) (\S*)",PARAMETRY).groups()[1]
+        PARAM_NAME['GUEST']=re.search("(\+guest) (\S*)",PARAMETRY).groups()[1]
+        NO_PAR=False
     
-    if not AUD and not DATE and not GUEST:
-        print ("Parametry to +aud (audycja) lub/i +date (data)")
-        return
-        
+
+    if not NO_PAR:
+        conn = sqlite3.connect(database_file)
+        cur = conn.cursor()
+        cur.execute("SELECT date_podcast, name_audition,  name_podcast, guest_podcast FROM tokfm WHERE name_audition LIKE "
+        +"'%"+PARAM_NAME['AUD']+"%'"\
+        +" AND date_podcast LIKE "+"'%"+PARAM_NAME['DATE']+"%'"\
+        +" AND guest_podcast LIKE "+"'%"+PARAM_NAME['GUEST']+"%'"\
+        +" LIMIT 9"\
+        )                
+        #rows = cur.fetchone()
+        rows = cur.fetchall()
+        if rows:        
+            for j,i in enumerate(rows,1):
+                print (str(j)+".",i[0],"|",AUDYCJE_LINK [i[1]][1],"|",str(i[2]).replace("-"," "),"|",i[3])
 
 
+        cur.close()
+        conn.close()
+    else:
+        print ("Parametry to +aud (audycja) lub/i +date (data)")        
 
-    cur.execute("SELECT date_podcast, name_audition,  name_podcast, guest_podcast FROM tokfm WHERE name_audition LIKE "
-    +"'%"+AUD+"%'"\
-    +" AND date_podcast LIKE "+"'%"+DATE+"%'"\
-    +" AND guest_podcast LIKE "+"'%"+GUEST+"%'"\
-    +" LIMIT 9"\
-    )                
-    #rows = cur.fetchone()
-    rows = cur.fetchall()
-    if rows:        
-        for j,i in enumerate(rows,1):
-            print (str(j)+".",i[0],"|",AUDYCJE_LINK [i[1]][1],"|",str(i[2]).replace("-"," "),"|",i[3])
-
-
-    cur.close()
-    conn.close()
 
 
 def szukaj_w_bazie_i_zgraj():
