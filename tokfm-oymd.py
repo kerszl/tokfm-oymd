@@ -18,55 +18,55 @@ from shutil import copyfile,move as movefile
 import json
 import sys
 from pathlib import Path, PureWindowsPath
-SQL_FALSE=0
-sep=os.sep
+sql_false=0
+SEP=os.sep
 
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.9a"
-PROGRAM_DATA="31.10.2020"
+PROGRAM_WERSJA="0.10"
+PROGRAM_DATA="05.11.2020"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
-#database_file=r'D:\temp\tokfm\tokfm.db'
+#DATABASE_FILE=r'D:\temp\tokfm\tokfm.db'
 
-database_file='tokfm.db'
-json_file="tok-fm-full.json"
-#json_file="tok-fm-full_temp.json"
-json_file_fav="tok-fm-fav.json"
+DATABASE_FILE='tokfm.db'
+JSON_FILE="tok-fm-full.json"
+#JSON_FILE="tok-fm-full_temp.json"
+JSON_FILE_FAV="tok-fm-fav.json"
 
 OFFSET_LINK="?offset="
 MAIN_LINK='https://audycje.tokfm.pl/audycja/'
 
 
-def zaladuj_audycje_json(plik):    
+def zaladuj_audycje_json(PLIK):    
     try:
-        with open(plik, 'r') as f:
-            AUDYCJE_LINK_=json.load(f)            
+        with open(PLIK, 'r') as f:
+            audycje_link_=json.load(f)            
     except ValueError as e:                
-        print ("Problem z plikiem "+plik+" lub formatem json")
+        print ("Problem z plikiem "+PLIK+" lub formatem json")
         print (e)        
         exit()
-    return AUDYCJE_LINK_
+    return audycje_link_
 #-dane do linków audycji są w tok-fm.json
 
-AUDYCJE_LINK = zaladuj_audycje_json(json_file)
+audycje_link = zaladuj_audycje_json(JSON_FILE)
 
 
 def max_ilosc_stron(audycja_ident):
     nr_site=randrange(13213432,93213439)
     
-    page_link=MAIN_LINK+audycja_ident+OFFSET_LINK+str(nr_site)
-    body=urlopen(page_link)
+    page_link = MAIN_LINK+audycja_ident+OFFSET_LINK+str(nr_site)
+    body = urlopen(page_link)
     soup = BeautifulSoup(body,'html.parser')
-    naglowek=soup.find('head')
-    max_strona=naglowek.find('link', rel="canonical").attrs['href']
+    naglowek = soup.find('head')
+    max_strona = naglowek.find('link', rel="canonical").attrs['href']
     
 
     if re.search(r'=[0-9]*$', max_strona) is None:
         max_strona=1
     else:
-        max_strona=max_strona.split("=")[-1]
+        max_strona = max_strona.split("=")[-1]
                                      
     page_link=MAIN_LINK+audycja_ident+OFFSET_LINK+str(max_strona)
     print ("Maxymalny odnosnik to: "+page_link)    
@@ -76,17 +76,14 @@ def max_ilosc_stron(audycja_ident):
 
 
 def zgraj_strone_audycji (audycja_ident,nr_site):    
-    AUDYCJA={}
+    audycje_wiersze={}
     czekaj=randrange(1,8)
     page_link=MAIN_LINK+audycja_ident+OFFSET_LINK+str(nr_site)
     print ("")
     print (page_link+" "+str(czekaj)+" sekund przerwy")                
 #   page_link='file:///D:/temp/offczarek.html'    
 
-    body=urlopen(page_link)
-    
-    
-
+    body=urlopen(page_link) 
     soup = BeautifulSoup(body,'html.parser')
     
     ANDROID_FILES_CLASS_ID="tok-podcasts__item tok-podcasts__item--name"
@@ -99,7 +96,7 @@ def zgraj_strone_audycji (audycja_ident,nr_site):
     TRWANIE_AUDYCJI_CLASS_ID="tok-podcasts__row--time---hour"
 
 
-    for i,fragment_strony in enumerate(audycje_metadane):
+    for fragment_strony in audycje_metadane:
         podcast_data_i_czas=fragment_strony.find('div',class_=DIG_CLASS_ID).find('span').text.strip()
         w_studio=fragment_strony.find('span',class_=TRWANIE_AUDYCJI_CLASS_ID).findNext('span').findAll('a')
         w_studio=fragment_strony.find('span',class_=TRWANIE_AUDYCJI_CLASS_ID).findNext('span')
@@ -138,19 +135,19 @@ def zgraj_strone_audycji (audycja_ident,nr_site):
         
         if podcast_nazwa[0]=='-':
             podcast_nazwa=podcast_nazwa[1:]        
-        AUDYCJA[podcast_id]=[audycja_id,audycja_nazwa,audycja_opis,\
+        audycje_wiersze[podcast_id]=[audycja_id,audycja_nazwa,audycja_opis,\
                               podcast_nazwa,\
                               podcast_data_i_czas,podcast_trwanie,\
                               data_index,podcast_gosc,\
                                 ]        
     sleep (czekaj)
-    return AUDYCJA
+    return audycje_wiersze
 
 
 
 
 class _baza():
-    database_file=database_file
+    DATABASE_FILE=DATABASE_FILE
     sql_create_tokfm_table = """ CREATE TABLE IF NOT EXISTS tokfm (
                                         id_podcast integer PRIMARY KEY,
                                         name_podcast text NOT NULL,
@@ -165,16 +162,16 @@ class _baza():
     
     conn = None
     cursorObj= None
-    DANE_TOK_FM={}
+    dane_tok_fm={}
 
-    def __init__(self,DANE_TOK_FM):
-        self.DANE_TOK_FM=DANE_TOK_FM
+    def __init__(self,dane_tok_fm):
+        self.dane_tok_fm=dane_tok_fm
         pass
     
     def create_connection(self):
-        database_file=self.database_file
+        DATABASE_FILE=self.DATABASE_FILE
         try:
-            conn = sqlite3.connect(self.database_file)
+            conn = sqlite3.connect(self.DATABASE_FILE)
             return conn
         except Error as e:
             print(e)
@@ -191,16 +188,16 @@ class _baza():
         return self.cursorObj
     
     def insert_date(self):
-        for i in self.DANE_TOK_FM:            
+        for i in self.dane_tok_fm:            
             id_podcast_=i
-            id_audition_=self.DANE_TOK_FM[i][0]
-            name_audition_=self.DANE_TOK_FM[i][1]
-            name_podcast_=self.DANE_TOK_FM[i][3]
-            date_podcast_=self.DANE_TOK_FM[i][4]
-            during_podcast_=self.DANE_TOK_FM[i][5]
-            date_index_=self.DANE_TOK_FM[i][6]
-            podcast_heard_=SQL_FALSE
-            guest_podcast_=self.DANE_TOK_FM[i][7]
+            id_audition_=self.dane_tok_fm[i][0]
+            name_audition_=self.dane_tok_fm[i][1]
+            name_podcast_=self.dane_tok_fm[i][3]
+            date_podcast_=self.dane_tok_fm[i][4]
+            during_podcast_=self.dane_tok_fm[i][5]
+            date_index_=self.dane_tok_fm[i][6]
+            podcast_heard_=sql_false
+            guest_podcast_=self.dane_tok_fm[i][7]
             self.cursorObj.execute("INSERT OR IGNORE INTO tokfm (id_podcast,name_podcast,id_audition,name_audition,\
                     date_podcast,during_podcast,date_index,podcast_heard,guest_podcast) VALUES(?,?,?,?,?,?,?,?,?)",\
                     (id_podcast_,name_podcast_,id_audition_,name_audition_,date_podcast_,during_podcast_,date_index_,podcast_heard_,guest_podcast_))
@@ -210,41 +207,41 @@ class _baza():
 def update_bazy():
 
 #Updatuje tylko ulubione audycje
-    AUDYCJE_LINK = zaladuj_audycje_json(json_file_fav)
+    audycje_link = zaladuj_audycje_json(JSON_FILE_FAV)
     
     nowe_audycje_licznik=0
 
 
-    sciezka=Path(database_file)
+    sciezka=Path(DATABASE_FILE)
     if not sciezka.exists():
-        print ("Nie ma pliku: "+database_file)
+        print ("Nie ma pliku: "+DATABASE_FILE)
         exit()
         
     
-    conn = sqlite3.connect(database_file)    
+    conn = sqlite3.connect(DATABASE_FILE)    
     cur = conn.cursor()
 
-    for audycja in AUDYCJE_LINK:
+    for audycja in audycje_link:
         Update=True
         i=1        
         while Update:            
-            AUDYCJA=zgraj_strone_audycji(AUDYCJE_LINK[audycja][0],i)                        
+            audycje_wiersze=zgraj_strone_audycji(audycje_link[audycja][0],i)                        
             i+=1
-            for aud in AUDYCJA:                        
+            for aud in audycje_wiersze:                        
                 cur.execute("SELECT id_podcast,date_podcast FROM tokfm where id_podcast = "+aud)
                 rows = cur.fetchone()
                 if not rows:
-                    print ("Update: "+AUDYCJA[aud][1]+" "+AUDYCJA[aud][4]+" "+AUDYCJA[aud][3])                     
-                    SQL_FALSE=0                
+                    print ("Update: "+audycje_wiersze[aud][1]+" "+audycje_wiersze[aud][4]+" "+audycje_wiersze[aud][3])                     
+                    sql_false=0                
                     id_podcast_=aud                                
-                    id_audition_=AUDYCJA[aud][0]
-                    name_audition_=AUDYCJA[aud][1]
-                    name_podcast_=AUDYCJA[aud][3]
-                    date_podcast_=AUDYCJA[aud][4]
-                    during_podcast_=AUDYCJA[aud][5]
-                    date_index_=AUDYCJA[aud][6]
-                    podcast_heard_=SQL_FALSE
-                    guest_podcast_=AUDYCJA[aud][7]
+                    id_audition_=audycje_wiersze[aud][0]
+                    name_audition_=audycje_wiersze[aud][1]
+                    name_podcast_=audycje_wiersze[aud][3]
+                    date_podcast_=audycje_wiersze[aud][4]
+                    during_podcast_=audycje_wiersze[aud][5]
+                    date_index_=audycje_wiersze[aud][6]
+                    podcast_heard_=sql_false
+                    guest_podcast_=audycje_wiersze[aud][7]
                     #cur.execute("INSERT OR IGNORE INTO tokfm (id_podcast,name_podcast,id_audition,name_audition,
                     cur.execute("INSERT OR IGNORE INTO tokfm (id_podcast,name_podcast,id_audition,name_audition,\
                             date_podcast,during_podcast,date_index,podcast_heard,guest_podcast) VALUES(?,?,?,?,?,?,?,?,?)",\
@@ -252,14 +249,14 @@ def update_bazy():
                     conn.commit()                
                     nowe_audycje_licznik+=1
                 else:
-                    print ("Not update: "+AUDYCJA[aud][1]+" "+AUDYCJA[aud][4]+" "+AUDYCJA[aud][3])
+                    print ("Not update: "+audycje_wiersze[aud][1]+" "+audycje_wiersze[aud][4]+" "+audycje_wiersze[aud][3])
                     #Sprawdzmy czy to powtorka, jezeli tak, cofamy sie dalej                    
-                    if AUDYCJA[aud][4]==rows[1]:
+                    if audycje_wiersze[aud][4]==rows[1]:
                         Update=False
                         break
     cur.close()
     conn.close()
-    AUDYCJE_LINK = zaladuj_audycje_json(json_file)
+    audycje_link = zaladuj_audycje_json(JSON_FILE)
     print ("Nowe audycje:",nowe_audycje_licznik)
 
 
@@ -267,15 +264,15 @@ def update_bazy():
 #mniej polaczen zrobic, zaktualizować
 
 def zgraj_wszystkie_audycje_do_bazy():
-    for audycja in AUDYCJE_LINK:        
+    for audycja in audycje_link:        
     #AUDYCJA={}
-    #   ile_stron=AUDYCJE_LINK[audycja][1]
+    #   ile_stron=audycje_link[audycja][1]
     #   if ile_stron==0:
-        ile_stron=int(max_ilosc_stron(AUDYCJE_LINK[audycja][0]))            
-        print ("Zgrywam audycje "+str(audycja)+" do: "+database_file)
+        ile_stron=int(max_ilosc_stron(audycje_link[audycja][0]))            
+        print ("Zgrywam audycje "+str(audycja)+" do: "+DATABASE_FILE)
         for i in range(1,ile_stron+1):
-            AUDYCJA=zgraj_strone_audycji (AUDYCJE_LINK[audycja][0],i)        
-            baza=_baza(AUDYCJA)
+            audycje_wiersze=zgraj_strone_audycji (audycje_link[audycja][0],i)        
+            baza=_baza(audycje_wiersze)
             baza.conn=baza.create_connection()
             if baza.conn is not None:
                 baza.create_table(baza.conn,baza.sql_create_tokfm_table)
@@ -291,29 +288,29 @@ def zgraj_wszystkie_audycje_do_bazy():
 
 #---przeszukiwanie katalogow na dysku w celu znalezienia plików z audycji
 #-Wrzucenie je do slownika?
-PODCAST_FILE={}
-KATALOG_TOK_FM_PODCASTY_BASE=""
-#KATALOG_TOK_FM_PODCASTY_ANDROID_FILES=KATALOG_TOK_FM_PODCASTY_BASE+"Android\\data\\fm.tokfm.android\\files\\"
-KATALOG_TOK_FM_PODCASTY_ANDROID_FILES=KATALOG_TOK_FM_PODCASTY_BASE+"e:\\audycje\\tok fm\\Android\\data\\fm.tokfm.android\\files\\"
-#KATALOG_TOK_FM_PODCASTY_RESULT_DIR=KATALOG_TOK_FM_PODCASTY_BASE+"Result\\"
-KATALOG_TOK_FM_PODCASTY_RESULT_DIR=KATALOG_TOK_FM_PODCASTY_BASE+"e:\\audycje\\tok fm\\Result\\"
-KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE=KATALOG_TOK_FM_PODCASTY_RESULT_DIR+"Przesluchane\\"
-KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE=KATALOG_TOK_FM_PODCASTY_RESULT_DIR+"Nieprzesluchane\\"
+podcast_file={}
+katalog_tok_fm_podcasty_base=""
+#katalog_tok_fm_podcasty_android_files=katalog_tok_fm_podcasty_base+"Android\\data\\fm.tokfm.android\\files\\"
+katalog_tok_fm_podcasty_android_files=katalog_tok_fm_podcasty_base+"e:\\audycje\\tok fm\\Android\\data\\fm.tokfm.android\\files\\"
+#katalog_tok_fm_podcasty_result_dir=katalog_tok_fm_podcasty_base+"Result\\"
+katalog_tok_fm_podcasty_result_dir=katalog_tok_fm_podcasty_base+"e:\\audycje\\tok fm\\Result\\"
+katalog_tok_fm_podcasty_result_dir_przesluchane=katalog_tok_fm_podcasty_result_dir+"Przesluchane\\"
+katalog_tok_fm_podcasty_result_dir_nieprzesluchane=katalog_tok_fm_podcasty_result_dir+"Nieprzesluchane\\"
 
 #Dziala pod Linuxem i Windowsem
 def szukaj_na_dysku():
-    filenameAndroid = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_ANDROID_FILES)
+    filenameAndroid = PureWindowsPath(katalog_tok_fm_podcasty_android_files)
     p1Android=Path(filenameAndroid)
     if not p1Android.exists():
         print ("Brak zgranego katalogu z plikami mp3 z Androida")
         print ("Powinno to mniej wiecej tak wygladac: "+str(p1Android)+"...00.mp3")
         exit()
     
-    filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR)
+    filenameResult = PureWindowsPath(katalog_tok_fm_podcasty_result_dir)
     p1Result=Path(filenameResult)
-    filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE)
+    filenameResult = PureWindowsPath(katalog_tok_fm_podcasty_result_dir_przesluchane)
     p2Result=Path(filenameResult)
-    filenameResult = PureWindowsPath(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE)
+    filenameResult = PureWindowsPath(katalog_tok_fm_podcasty_result_dir_nieprzesluchane)
     p3Result=Path(filenameResult)
         
 
@@ -327,95 +324,92 @@ def szukaj_na_dysku():
     
 
 #systemowy separator katalogow
-    #sep=os.sep
+    
     for root, dirs, files in os.walk(str(p1Android)):
         for file in files:            
             if re.search(r'^[0-9][0-9]\.mp3$', file):
             #if file.endswith(".mp3"):
-                CALY_PLIK_SCIEZKA=os.path.join(root, file)                
-                iD_PODSCAST=sep+CALY_PLIK_SCIEZKA.lstrip(str(p1Android))
-                iD_PODSCAST=iD_PODSCAST.rstrip('mp3')
-                iD_PODSCAST=iD_PODSCAST.rstrip('.')                
+                caly_plik_sciezka=os.path.join(root, file)                
+                id_podcast=SEP+caly_plik_sciezka.lstrip(str(p1Android))
+                id_podcast=id_podcast.rstrip('mp3')
+                id_podcast=id_podcast.rstrip('.')                
                 #trzeba 2 razy obcinac, bo za jednym razem ".mp3" zle kasuje
-                iD_PODSCAST=iD_PODSCAST.replace(sep,"").lstrip("0")                
-                iD_PODSCAST=iD_PODSCAST.replace(sep,"")
-                PODCAST_FILE[iD_PODSCAST]=CALY_PLIK_SCIEZKA
+                id_podcast=id_podcast.replace(SEP,"").lstrip("0")                
+                id_podcast=id_podcast.replace(SEP,"")
+                podcast_file[id_podcast]=caly_plik_sciezka
 
 #----przeszukiwanie w bazie i sprawdzanie czy audycja przesluchana czy nie
 #----jezeli jest inaczej niz trzeba to przerzuca sie ja automatycznie
 
-def szukaj_w_bazie_i_katalogu(KATALOG_Z,KATALOG_DO):    
+def szukaj_w_bazie_i_katalogu(katalog_z,katalog_do):    
 
-    conn = sqlite3.connect(database_file)
+    conn = sqlite3.connect(DATABASE_FILE)
     cur = conn.cursor()
 
-    KAT_PRZESLUCHANE=PureWindowsPath(KATALOG_Z)
-    KAT_PRZESLUCHANE_=str(KAT_PRZESLUCHANE)+str(sep)
+    kat_przesluchane=PureWindowsPath(katalog_z)
+    kat_przesluchane_=str(kat_przesluchane)+str(SEP)
 
-    KAT_NIEPRZESLUCHANE=PureWindowsPath(KATALOG_DO)
-    KAT_NIEPRZESLUCHANE_=str(KAT_NIEPRZESLUCHANE)+str(sep)
+    kat_nieprzesluchane=PureWindowsPath(katalog_do)
+    kat_nieprzesluchane_=str(kat_nieprzesluchane)+str(SEP)
 
     podcast_heard_val=0
 
-    if (KATALOG_Z==KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE):
+    if (katalog_z==katalog_tok_fm_podcasty_result_dir_przesluchane):
         podcast_heard_val="0"
     else:
         podcast_heard_val="1"
     
     Ilosc_przenosin=0        
 #Porzadek w katalogu "NIE/PRZESLUCHANE" - uwaga zmienia sie zaleznosc
-    for root, dirs, files in os.walk(str(KAT_PRZESLUCHANE_)):
+    for root, dirs, files in os.walk(str(kat_przesluchane_)):
         for file in files:                                    
             if re.search(r'^[0-3][0-9] - [0-9A-Za-z ]*.mp3$', file):            
-                CALY_PLIK_SCIEZKA=os.path.join(root, file)                
+                caly_plik_sciezka=os.path.join(root, file)                
                 #lstrip zle dziala!!!
-                KAT_P2_=CALY_PLIK_SCIEZKA.replace(KAT_PRZESLUCHANE_,"",1)
+                kat_p2_=caly_plik_sciezka.replace(kat_przesluchane_,"",1)
 
 
-                #KAT_P2=re.search("([a-z A-Z0-9.-]*).([0-9 -]*).([0-3][0-9] - *)([0-9a-z A-Z]*)(\.mp3)",KAT_P2_).groups()
-                KAT_P2=re.search("([a-z A-Z0-9.-]*).([0-9 -]*).([0-3][0-9] - *)([0-9a-zA-Z ]*)",KAT_P2_).groups()
+                #kat_p2=re.search("([a-z A-Z0-9.-]*).([0-9 -]*).([0-3][0-9] - *)([0-9a-z A-Z]*)(\.mp3)",kat_p2_).groups()
+                kat_p2=re.search("([a-z A-Z0-9.-]*).([0-9 -]*).([0-3][0-9] - *)([0-9a-zA-Z ]*)",kat_p2_).groups()
                 
                 
 
                 
 
-                KAT_P2_NAME_AUD_DB=""
-                for i in AUDYCJE_LINK:
-                    if AUDYCJE_LINK[i][1].lower()==KAT_P2[0].strip().lower():
-                        KAT_P2_NAME_AUD_DB=i                        
-                if not KAT_P2_NAME_AUD_DB:
-                    print ("Blad w nazwie katalogu:",r'"'+KAT_P2[0]+r'"')
+                kat_p2_name_aud_db=""
+                for i in audycje_link:
+                    if audycje_link[i][1].lower()==kat_p2[0].strip().lower():
+                        kat_p2_name_aud_db=i                        
+                if not kat_p2_name_aud_db:
+                    print ("Blad w nazwie katalogu:",r'"'+kat_p2[0]+r'"')
                     exit ()
                 
 
-                KAT_P2_NAME_DATE_DB_=KAT_P2[1]+"-"+KAT_P2[2].rstrip("- ")                                
-                KAT_P2_NAME_DATE_DB=datetime.strptime(KAT_P2_NAME_DATE_DB_,"%Y - %m-%d").strftime("%d.%m.%Y")
-                KAT_P2_NAME_POD_DB=KAT_P2[3].replace(" ","-")
-                ROK_MIESIAC=datetime.strptime(KAT_P2_NAME_DATE_DB,"%d.%m.%Y").strftime("%Y - %m")      
-                KAT_NIEPRZESLUCHANE_AUDYCJA=KAT_NIEPRZESLUCHANE_+AUDYCJE_LINK[KAT_P2_NAME_AUD_DB][1]                                                
-                KAT_NIEPRZESLUCHANE_AUDYCJA_DATA=KAT_NIEPRZESLUCHANE_AUDYCJA+sep+ROK_MIESIAC                
-                KATALOGI_NIEPRZESLUCHANE=[KAT_NIEPRZESLUCHANE_,KAT_NIEPRZESLUCHANE_AUDYCJA,KAT_NIEPRZESLUCHANE_AUDYCJA_DATA]
+                kat_p2_name_date_db=kat_p2[1]+"-"+kat_p2[2].rstrip("- ")                                
+                kat_p2_NAME_DATE_DB=datetime.strptime(kat_p2_name_date_db,"%Y - %m-%d").strftime("%d.%m.%Y")
+                kat_p2_NAME_POD_DB=kat_p2[3].replace(" ","-")
+                rok_miesiac=datetime.strptime(kat_p2_NAME_DATE_DB,"%d.%m.%Y").strftime("%Y - %m")      
+                kat_nieprzesluchane_audycja=kat_nieprzesluchane_+audycje_link[kat_p2_name_aud_db][1]                                                
+                kat_nieprzesluchane_audycja_data=kat_nieprzesluchane_audycja+SEP+rok_miesiac                
+                katalogi_nieprzesluchane=[kat_nieprzesluchane_,kat_nieprzesluchane_audycja,kat_nieprzesluchane_audycja_data]
                 
-                if KAT_P2_NAME_AUD_DB:                                    
+                if kat_p2_name_aud_db:                                    
                     cur.execute("SELECT name_audition, date_podcast, name_podcast FROM tokfm WHERE name_audition LIKE "
-                    +"'%"+KAT_P2_NAME_AUD_DB+"%'"\
-                    +" AND date_podcast LIKE "+"'%"+KAT_P2_NAME_DATE_DB+"%'"\
-                    +" AND name_podcast LIKE "+"'%"+KAT_P2_NAME_POD_DB+"%'"\
+                    +"'%"+kat_p2_name_aud_db+"%'"\
+                    +" AND date_podcast LIKE "+"'%"+kat_p2_NAME_DATE_DB+"%'"\
+                    +" AND name_podcast LIKE "+"'%"+kat_p2_NAME_POD_DB+"%'"\
                     +" AND podcast_heard = "+podcast_heard_val\
                     )                
                 rows = cur.fetchone()
                 if rows:                    
-                    for katalog in KATALOGI_NIEPRZESLUCHANE:
+                    for katalog in katalogi_nieprzesluchane:
                         filenameResult = PureWindowsPath(katalog)                        
                         if not Path(filenameResult).exists():                      
                             Path(filenameResult).mkdir()                    
-                    movefile (CALY_PLIK_SCIEZKA,KAT_NIEPRZESLUCHANE_AUDYCJA_DATA)
-                    print ("Przenioslem \""+file+"\" do "+KAT_NIEPRZESLUCHANE_AUDYCJA_DATA+sep)
+                    movefile (caly_plik_sciezka,kat_nieprzesluchane_audycja_data)
+                    print ("Przenioslem \""+file+"\" do "+kat_nieprzesluchane_audycja_data+SEP)
                     Ilosc_przenosin+=1
-                
-                    
-
-                
+                                                
     cur.close()
     conn.close()
     print ("Ilosc przenosin:",Ilosc_przenosin)
@@ -425,31 +419,31 @@ def szukaj_w_bazie_i_katalogu(KATALOG_Z,KATALOG_DO):
 
 
 #Przeszukiwanie dziala pod Linuxem i Windowsem
-def SZUKAJ (PARAMETRY):
+def szukaj (parametry):
     
     #+aud
-    #PARAMETRY="+aud off +date   2020    "
+    #parametry="+aud off +date   2020    "
     #Usun biale znaki    
-    #PAR=re.sub("\s+"," ",PARAMETRY)
+    #PAR=re.sub("\s+"," ",parametry)
     PARAM_NAME={'AUD':"",'DATE':"",'GUEST':""}
-    NO_PAR=True
+    no_par=True
     
 
-    if re.search("\+aud",PARAMETRY):        
-        PARAM_NAME['AUD']=re.search("(\+aud) (\S*)",PARAMETRY).groups()[1]
-        NO_PAR=False
+    if re.search("\+aud",parametry):        
+        PARAM_NAME['AUD']=re.search("(\+aud) (\S*)",parametry).groups()[1]
+        no_par=False
 
-    if re.search("\+date",PARAMETRY):
-        PARAM_NAME['DATE']=re.search("(\+date) (\S*)",PARAMETRY).groups()[1]
-        NO_PAR=False
+    if re.search("\+date",parametry):
+        PARAM_NAME['DATE']=re.search("(\+date) (\S*)",parametry).groups()[1]
+        no_par=False
     
-    if re.search("\+guest",PARAMETRY):
-        PARAM_NAME['GUEST']=re.search("(\+guest) (\S*)",PARAMETRY).groups()[1]
-        NO_PAR=False
+    if re.search("\+guest",parametry):
+        PARAM_NAME['GUEST']=re.search("(\+guest) (\S*)",parametry).groups()[1]
+        no_par=False
     
 
-    if not NO_PAR:
-        conn = sqlite3.connect(database_file)
+    if not no_par:
+        conn = sqlite3.connect(DATABASE_FILE)
         cur = conn.cursor()
         cur.execute("SELECT date_podcast, name_audition,  name_podcast, guest_podcast FROM tokfm WHERE name_audition LIKE "
         +"'%"+PARAM_NAME['AUD']+"%'"\
@@ -461,45 +455,45 @@ def SZUKAJ (PARAMETRY):
         rows = cur.fetchall()
         if rows:        
             for j,i in enumerate(rows,1):
-                print (str(j)+".",i[0],"|",AUDYCJE_LINK [i[1]][1],"|",str(i[2]).replace("-"," "),"|",i[3])
+                print (str(j)+".",i[0],"|",audycje_link [i[1]][1],"|",str(i[2]).replace("-"," "),"|",i[3])
 
 
         cur.close()
         conn.close()
     else:
-        print ("Parametry to +aud (audycja) lub/i +date (data)")        
+        print ("parametry to +aud (audycja) lub/i +date (data)")        
 
 
 
 def szukaj_w_bazie_i_zgraj():
-    conn = sqlite3.connect(database_file)
+    conn = sqlite3.connect(DATABASE_FILE)
     cur = conn.cursor()
 
-    for i in PODCAST_FILE:
+    for i in podcast_file:
         cur.execute("SELECT id_podcast, name_audition, name_podcast, date_podcast, podcast_heard FROM tokfm where id_podcast = "+i)
         rows = cur.fetchone()
         if not rows:
             print("Nie znaleziono audycji: "+i)
         else:
-            #KATALOG_PODCAST=rows[1].replace("-"," ")
-            KATALOG_PODCAST=AUDYCJE_LINK[rows[1]][1]
-            DATA_AUDYCJI=datetime.strptime(rows[3],"%d.%m.%Y %H:%M")
-            #ROK=str(DATA_AUDYCJI.year)
-            ROK_MIESIAC=DATA_AUDYCJI.strftime("%Y - %m")
-            DZIEN=DATA_AUDYCJI.strftime("%d")
+            #katalog_podcast=rows[1].replace("-"," ")
+            katalog_podcast=audycje_link[rows[1]][1]
+            data_audycji=datetime.strptime(rows[3],"%d.%m.%Y %H:%M")
+            #ROK=str(data_audycji.year)
+            rok_miesiac=data_audycji.strftime("%Y - %m")
+            dzien=data_audycji.strftime("%d")
             
-            SQL_FALSE=0
-            if rows[4]==SQL_FALSE:
-                KAT=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE
-                KAT_OPOZYCYJNY=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE
+            sql_false=0
+            if rows[4]==sql_false:
+                kat=katalog_tok_fm_podcasty_result_dir_nieprzesluchane
+                kat_opozycyjny=katalog_tok_fm_podcasty_result_dir_przesluchane
             else:
-                KAT=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE
-                KAT_OPOZYCYJNY=KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE
+                kat=katalog_tok_fm_podcasty_result_dir_przesluchane
+                kat_opozycyjny=katalog_tok_fm_podcasty_result_dir_nieprzesluchane
 
-            KATALOG=KAT+KATALOG_PODCAST
-            KATALOG_OPOZYCYJNY=KAT_OPOZYCYJNY+KATALOG_PODCAST
-            filename = PureWindowsPath(KATALOG)
-            #filename_OPOZYCYJNY=PureWindowsPath(KATALOG_OPOZYCYJNY)
+            katalog=kat+katalog_podcast
+            katalog_opozycyjny=kat_opozycyjny+katalog_podcast
+            filename = PureWindowsPath(katalog)
+            #filename_OPOZYCYJNY=PureWindowsPath(katalog_opozycyjny)
 
             #print (filename)
             p1=Path(filename)
@@ -509,49 +503,49 @@ def szukaj_w_bazie_i_zgraj():
                 #os.mkdir(p1)            
 
 
-            KATALOG=KATALOG+"\\"+ROK_MIESIAC
-            KATALOG_OPOZYCYJNY=KATALOG_OPOZYCYJNY+"\\"+ROK_MIESIAC
+            katalog=katalog+"\\"+rok_miesiac
+            katalog_opozycyjny=katalog_opozycyjny+"\\"+rok_miesiac
             
-            filename = PureWindowsPath(KATALOG)
-            filename_OPOZYCYJNY = PureWindowsPath(KATALOG_OPOZYCYJNY)
+            filename = PureWindowsPath(katalog)
+            #filename_opozycyjny = PureWindowsPath(katalog_opozycyjny)
 
             p1=Path(filename)
 
             if not p1.exists():
                 p1.mkdir()
                 #os.mkdir(p1)
-            FILENAME_NO_DASH=rows[2].replace('-', ' ')
-            FILENAME=DZIEN+" - "+FILENAME_NO_DASH+".mp3"
+            filename_no_dash=rows[2].replace('-', ' ')
+            filename=dzien+" - "+filename_no_dash+".mp3"
                         
-            KATALOG_FILENAME=KATALOG+"\\"+FILENAME
-            KATALOG_FILENAME_OPOZYCYJNY=KATALOG_OPOZYCYJNY+"\\"+FILENAME
-            filename=PureWindowsPath(KATALOG_FILENAME)
+            katalog_filename=katalog+"\\"+filename
+            katalog_filename_opozycyjny=katalog_opozycyjny+"\\"+filename
+            filename=PureWindowsPath(katalog_filename)
             p1=Path(filename)
             if not p1.exists():                
-                copyfile(PODCAST_FILE[i],str(p1))
+                copyfile(podcast_file[i],str(p1))
                 print ("Skopiowano: "+str(p1))
             else:
                 print ("Plik istnieje: "+str(p1))
             #Kasujemy pozostalosci jezeli byl dawnym katalogu
-            filename=PureWindowsPath(KATALOG_FILENAME_OPOZYCYJNY)
+            filename=PureWindowsPath(katalog_filename_opozycyjny)
             p1=Path(filename)
             if p1.exists():
                 p1.unlink()
                 print ("Skasowalem: "+str(p1))
 
 
-            #FILENAME_SHORT=rows[2].split("-")[0:6]
-            #print (FILENAME_SHORT)
+            #filename_SHORT=rows[2].split("-")[0:6]
+            #print (filename_SHORT)
      
     cur.close()
     conn.close()
 
 #-------------------------
 
-def DRUKUJ_NAZWE_PROGRAMU ():
+def drukuj_nazwe_programu ():
     print (PROGRAM_NAME+" "+PROGRAM_WERSJA+" ("+PROGRAM_DATA+")")
 
-def WYSWIETL_POMOC ():
+def wyswietl_pomoc ():
     print ("Proszę podać parametr \n")
     print ("update - Aktualizuje baze podcastów")
     print (r'copy - Przeszukuje "surowe" podcasty na dysku i je odpowiednio kopiuje')
@@ -562,48 +556,48 @@ def WYSWIETL_POMOC ():
 
 
 def nazwa_parametru():
-    #PARAMETRY=[]
+    #parametry=[]
     total = len(sys.argv)
     cmdargs = sys.argv
 
     if total < 2:                    
-        PARAMETRY=""
+        parametry=""
     else:
-        PARAMETRY=cmdargs[1:]    
-    return PARAMETRY
+        parametry=cmdargs[1:]    
+    return parametry
 
 #-----Poczatek programu----
-DRUKUJ_NAZWE_PROGRAMU()
-PARAMETR_NAME=nazwa_parametru()
+drukuj_nazwe_programu()
+parametr_name=nazwa_parametru()
 
-if not PARAMETR_NAME:
-    WYSWIETL_POMOC()
+if not parametr_name:
+    wyswietl_pomoc()
 else:
-    if PARAMETR_NAME[0] =="update":
+    if parametr_name[0] =="update":
         update_bazy()
-    if PARAMETR_NAME[0] =="copy":
+    if parametr_name[0] =="copy":
         szukaj_na_dysku()
         szukaj_w_bazie_i_zgraj()
-    if PARAMETR_NAME[0] =="search":
-        SZUKAJ(" ".join(PARAMETR_NAME))        
+    if parametr_name[0] =="search":
+        szukaj(" ".join(parametr_name))        
         
-    if PARAMETR_NAME[0] =="help":
-        WYSWIETL_POMOC()
-    if PARAMETR_NAME[0] =="fix":
+    if parametr_name[0] =="help":
+        wyswietl_pomoc()
+    if parametr_name[0] =="fix":
         print ("Sprawdzam w podkasty: Przesluchane")
-        szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE)
+        szukaj_w_bazie_i_katalogu(katalog_tok_fm_podcasty_result_dir_przesluchane,katalog_tok_fm_podcasty_result_dir_nieprzesluchane)
         print ("Sprawdzam w podkasty: NiePrzesluchane")
-        szukaj_w_bazie_i_katalogu(KATALOG_TOK_FM_PODCASTY_RESULT_DIR_NIEPRZESLUCHANE,KATALOG_TOK_FM_PODCASTY_RESULT_DIR_PRZESLUCHANE)
+        szukaj_w_bazie_i_katalogu(katalog_tok_fm_podcasty_result_dir_nieprzesluchane,katalog_tok_fm_podcasty_result_dir_przesluchane)
 
 #Parametr dla doswiadczonych, zgrywa wszystkie podcasty z audycji
 #podane w pliku tok-fm.json, lub tok-fm.jsonbak
-    if PARAMETR_NAME[0] =="full":
+    if parametr_name[0] =="full":
         zgraj_wszystkie_audycje_do_bazy()        
 
 #---tu kod pomocniczy
 #szukaj_na_dysku()
-#print (PODCAST_FILE)
-#SZUKAJ("+aud off  +aud aa    +data   2020    ")
+#print (podcast_file)
+#szukaj("+aud off  +aud aa    +data   2020    ")
 
 
 
