@@ -1,0 +1,10 @@
+#Instaluje moduly
+#pokazuje jakie są moduly
+#pip freeze 
+#-przyklady opisywania modulow
+#pkg1
+#pkg2
+#pkg3>=1.0,<=2.0
+#python.exe -m pip install --upgrade pip
+#pip install -r requirements.txt
+bs4

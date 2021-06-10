@@ -1,6 +1,5 @@
-#--Ignoruj mp3
-*.mp3
-*.*bak
 *.html
-tokfm_old.db
-test_funkcji.py
+tmp/*
+kopie/*
+workspace.code-workspace
+tempCodeRunnerFile.py
