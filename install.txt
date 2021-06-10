@@ -1,6 +1,0 @@
-git clone https://github.com/kerszl/tokfm-oymd.git
-cd tokfm-oymd.git
-chmod +x tokfm-oymd
-
-pip3 install --upgrade pip
-pip3 install bs4
