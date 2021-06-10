@@ -1,10 +1,12 @@
-# tokfm-oymd
-Zgraj audycje Tok-fm na swoj mp3/mp4 odtwarzacz z urządzenia Android.
-
-Aplikacja kopiuje nieczytelne nazwy audycji TOK-FM z urządzenia Androida na Twój dysk i ładnie
-je segreguje oraz nadaje nazwy. Jest mozliwość ściągniecia bazy podcastów na swój dysk.
-Podcasty możesz oznaczyć, jako przesłuchane lub jako nie.
+## tokfm-oymd
 
 
 
-Działa na Linuxie i Windowsie
+
+#Bardzo ogólna instrukcja (Z czasem ulepsze)
+- Sprawdź gdzie są twoje podcasty z Tok-Fm (Zazwyczaj są w Android/data/fm.tokfm.android/files)
+- Zgraj je sobie na dysk i dodaj odpowiednie sciezki w konfigu (Będzie to lepiej zrobione)
+
+```python
+tokfm-oymd.py fix_names
+```
