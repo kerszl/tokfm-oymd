@@ -1,4 +1,4 @@
-# Tokfm-oymd
+# Tokfm-oymd (Wersja bardzo beta)
 
 ## Instalacja
 ```bash
