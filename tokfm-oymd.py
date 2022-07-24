@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 #Zgraj audycje Tok-fm na swoj mp3/mp4 odtwarzacz z urządzenia Android.
 #TAK SIĘ NIE PISZE PROGRAMÓW, do przerobienia!
 #------------------------
@@ -640,7 +641,8 @@ else:
 
 
     if parametr_name[0] =="fix_names":
-        szukaj_na_dysku()
+        
+        szukaj_na_dysku()        
         szukaj_w_bazie_i_zgraj()
 
     if parametr_name[0] =="search_podcast":
