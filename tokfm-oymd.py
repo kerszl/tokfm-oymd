@@ -640,8 +640,7 @@ else:
                 exit()
 
 
-    if parametr_name[0] =="fix_names":
-        
+    if parametr_name[0] =="fix_names":        
         szukaj_na_dysku()        
         szukaj_w_bazie_i_zgraj()
 
