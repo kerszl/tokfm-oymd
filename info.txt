@@ -1,2 +1,4 @@
 Katalogi tok fm na smartfonie...
 \\Android\\data\\tok fm\\Android\\data\\fm.tokfm.android\\files\\"
+
+sprobowac zgrywanie bezposrednio z androida 
