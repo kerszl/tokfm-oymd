@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.26] - 2026-06-30
+
+### Dodano
+- **Informacja o odmontowaniu telefonu:** W ekranie pomocy (`help`) dodano czytelne przypomnienie o konieczności odmontowania telefonu po zakończeniu pracy przy użyciu komendy `fusermount -u /mnt/s23`.
+
 ## [0.25] - 2026-06-30
 
 ### Naprawiono

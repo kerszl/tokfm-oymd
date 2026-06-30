@@ -33,7 +33,7 @@ SEP=os.sep
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.25"
+PROGRAM_WERSJA="0.26"
 PROGRAM_DATA="30.06.2026"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
@@ -863,6 +863,8 @@ def wyswietl_pomoc ():
     print ("search_podcast - Szuka podcasty")    
     print ("move_heard - Sprawdza czy audycje były przesłuchane i je przenosi")
     print ("help - Wyswietla tą pomoc")
+    print ("\n* Pamiętaj, aby po zakończeniu pracy odmontować telefon komendą:")
+    print ("  fusermount -u /mnt/s23")
 
 
 
