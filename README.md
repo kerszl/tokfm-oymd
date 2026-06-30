@@ -7,6 +7,9 @@ Skrypt automatycznie odczytuje pliki `.mp3` pobrane na telefonie, odpytuje bazę
 > [!NOTE]  
 > Program został zoptymalizowany pod kątem działania w środowisku Linux (w tym WSL - Windows Subsystem for Linux).
 
+> [!TIP]
+> Aplikacja została oryginalnie stworzona kilka lat temu przez [kerszl](https://github.com/kerszl). W 2026 roku kod przeszedł gruntowną modernizację, optymalizację oraz dostosowanie do nowego układu strony TOK FM w trybie pair-programmingu z asystentem AI **Antigravity** od Google DeepMind.
+
 ---
 
 ## 🚀 Główne Funkcje
