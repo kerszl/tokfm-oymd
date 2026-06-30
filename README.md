@@ -10,6 +10,11 @@ Skrypt automatycznie odczytuje pliki `.mp3` pobrane na telefonie, odpytuje bazę
 > [!TIP]
 > Aplikacja została oryginalnie stworzona kilka lat temu przez [kerszl](https://github.com/kerszl). W 2026 roku kod przeszedł gruntowną modernizację, optymalizację oraz dostosowanie do nowego układu strony TOK FM w trybie pair-programmingu z asystentem AI **Antigravity** od Google DeepMind.
 
+> [!IMPORTANT]
+> **Ważna informacja prawna:**
+> * Repozytorium **nie zawiera ani nie udostępnia żadnych plików audycji czy materiałów dźwiękowych**.
+> * Aby pobrać podcasty na swój telefon (które ten skrypt następnie kopiuje i porządkuje), **musisz posiadać aktywny abonament TOK FM Premium**. Skrypt służy wyłącznie jako pomocnicze narzędzie do porządkowania własnych, legalnie pobranych plików na prywatnym odtwarzaczu.
+
 ---
 
 ## 🚀 Główne Funkcje
