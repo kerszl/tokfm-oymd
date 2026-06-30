@@ -62,6 +62,9 @@ python tokfm-oymd.py kopiuj
 Program automatycznie zweryfikuje połączenie, zamontuje pamięć telefonu, przeskanuje pliki, dopasuje ich nazwy i skopiuje je do odpowiednich katalogów według schematu:
 `Result/Nieprzesluchane/[Nazwa Audycji]/[Rok - Miesiąc]/[Dzień] - [Tytuł odcinka].mp3`
 
+> [!WARNING]
+> **Uwaga:** Zdefiniowane w skrypcie `tokfm-oymd.py` ścieżki (punkt montowania telefonu oraz katalog docelowy zapisu plików na komputerze) muszą być dostosowane do Twoich rzeczywistych ścieżek w systemie plików.
+
 ![Podgląd działania procesu kopiowania](kopiowanie.png)
 
 ### 2. Aktualizacja lokalnej bazy danych podcastów
