@@ -9,11 +9,12 @@ pip3 install --upgrade pip
 pip3 install bs4
 ```
 
-## Kopiowanie mp3 do czytelnej postaci (z czasem ulepsze opis)
-- Sprawdź gdzie są twoje podcasty z Tok-Fm (Zazwyczaj są w Android/data/fm.tokfm.android/files)
-- Zgraj je sobie na dysk i dodaj odpowiednie sciezki w konfigu (Będzie to lepiej zrobione)
-```python
-tokfm-oymd.py fix_names
+## Kopiowanie mp3 do czytelnej postaci
+- Sprawdź gdzie są Twoje podcasty z Tok-Fm (zazwyczaj są w `Android/data/fm.tokfm.android/moved/`)
+- Podłącz telefon do WSL i zamontuj go, a następnie uruchom polecenie:
+```bash
+python tokfm-oymd.py kopiuj
 ```
-- podcasty będą zgrywane na twój dysk i będzie nadawana odpowiednia nazwa
+- Podcasty zostaną skopiowane na Twój dysk i zostaną im nadane odpowiednie nazwy.
 
+![alt text](kopiowanie.png)

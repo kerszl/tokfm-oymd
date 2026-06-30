@@ -3,3 +3,6 @@ tmp/*
 kopie/*
 workspace.code-workspace
 tempCodeRunnerFile.py
+__pycache__/
+ostatnia dobra zmiana/
+powershell/

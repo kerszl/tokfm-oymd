@@ -1,0 +1,43 @@
+Dodanie urządzenia USB (MTP) do WSL
+
+1. Instalacja (jednorazowo)
+===========================
+Windows (PowerShell jako Administrator):
+winget install --interactive --exact dorssel.usbipd-win
+
+Linux (WSL):
+sudo apt update
+sudo apt install -y usbutils jmtpfs
+sudo mkdir -p /mnt/s23
+sudo chown -R $USER:$USER /mnt/s23
+
+2. Uruchomienie i montowanie
+===========================
+Windows (zwykły PowerShell):
+usbipd list
+# Znajdź BUSID urządzenia (np. 1-1)
+
+Windows (PowerShell jako Administrator):
+usbipd bind --force --busid 1-1
+
+Windows (zwykły PowerShell):
+usbipd attach --wsl --busid 1-1
+
+Linux (WSL) - Odblokuj ekran telefonu:
+jmtpfs /mnt/s23
+ls -la /mnt/s23
+
+Linux (Odmontowanie przed odłączeniem):
+fusermount -u /mnt/s23
+
+3. Rozwiązywanie problemów (Troubleshooting)
+===========================================
+Błąd "Permission denied" w WSL przy próbie odczytu katalogu telefonu:
+Dzieje się tak, gdy komenda `jmtpfs` zostanie uruchomiona przez `sudo` (jako root). FUSE domyślnie blokuje dostęp innym użytkownikom.
+
+Rozwiązanie:
+1. Odmontuj telefon jako root:
+   sudo fusermount -u /mnt/s23
+2. Upewnij się, że ekran telefonu jest odblokowany.
+3. Zamontuj telefon ponownie JAKO ZWYKŁY UŻYTKOWNIK (bez sudo):
+   jmtpfs /mnt/s23
