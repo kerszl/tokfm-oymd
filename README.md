@@ -8,7 +8,7 @@ Skrypt automatycznie odczytuje pliki `.mp3` pobrane na telefonie, odpytuje bazę
 
 Autor aplikacji często jeździ rowerem i w tym czasie chętnie słucha audycji TOK FM. Słuchanie bezpośrednio ze smartfona ma jednak spore wady – szybko rozładowuje baterię telefonu, a obsługa ekranu dotykowego podczas dynamicznej jazdy jest skrajnie niewygodna i niebezpieczna. 
 
-Zdecydowanie lepszym, trwalszym i wygodniejszym rozwiązaniem jest korzystanie z dedykowanego, fizycznego odtwarzacza MP3/MP4 z fizycznymi przyciskami. Ten projekt powstał po to, aby błyskawicznie przetransferować i uporządkować legalnie pobrane pliki podcastów na tradycyjne urządzenie grające.
+Zdecydowanie lepszym, trwalszym i bezpieczniejszym rozwiązaniem jest korzystanie z dedykowanego odtwarzacza MP3/MP4 z fizycznymi przyciskami w połączeniu ze słuchawkami zausznymi (np. kostnymi). Pozwala to na komfortowe słuchanie ulubionych audycji przy zachowaniu pełnego kontaktu z otoczeniem i słyszeniu dźwięków ruchu drogowego (np. nadjeżdżających z tyłu samochodów). Ten projekt powstał po to, aby błyskawicznie przetransferować i uporządkować legalnie pobrane pliki podcastów na tradycyjne urządzenie grające.
 
 > [!NOTE]  
 > Program został zoptymalizowany pod kątem działania w środowisku Linux (w tym WSL - Windows Subsystem for Linux).
