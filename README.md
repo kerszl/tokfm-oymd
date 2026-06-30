@@ -4,6 +4,12 @@ Aplikacja kliencka dla systemu **Linux / WSL** służąca do automatycznego zgry
 
 Skrypt automatycznie odczytuje pliki `.mp3` pobrane na telefonie, odpytuje bazę danych i stronę TOK FM w celu odtworzenia oryginalnych nazw odcinków, po czym kopiuje je do uporządkowanej struktury katalogów na Twoim komputerze.
 
+## 🚲 Dlaczego powstał ten projekt? (Motywacja)
+
+Autor aplikacji często jeździ rowerem i w tym czasie chętnie słucha audycji TOK FM. Słuchanie bezpośrednio ze smartfona ma jednak spore wady – szybko rozładowuje baterię telefonu, a obsługa ekranu dotykowego podczas dynamicznej jazdy jest skrajnie niewygodna i niebezpieczna. 
+
+Zdecydowanie lepszym, trwalszym i wygodniejszym rozwiązaniem jest korzystanie z dedykowanego, fizycznego odtwarzacza MP3/MP4 z fizycznymi przyciskami. Ten projekt powstał po to, aby błyskawicznie przetransferować i uporządkować legalnie pobrane pliki podcastów na tradycyjne urządzenie grające.
+
 > [!NOTE]  
 > Program został zoptymalizowany pod kątem działania w środowisku Linux (w tym WSL - Windows Subsystem for Linux).
 
