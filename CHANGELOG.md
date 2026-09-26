@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.27] - 2026-09-26
+
+### Naprawiono
+- **Błąd pobierania listy podcastów (HTTP Error 400 Bad Request):** Nowy szablon Astro na stronie TOK FM zaczął kodować znak `&` jako encję `&amp;` w tagu `<link rel="preload">` wyspy serwerowej `PodcastsIsland`. Powodowało to błąd serwera `Missing required query parameters` przez błędne nazwy parametrów (`amp;p` i `amp;s`). Zastosowano `html.unescape()` przy wyodrębnianiu URL wyspy serwerowej.
+- **Obsługa paginacji:** Dostosowano wykrywanie kolejnych stron w audycjach – przycisk przejścia do następnej strony (`tok-pagination__button-next`) jest obecnie tagiem `<button>` zamiast `<a>`, a stan ostatniej strony sygnalizowany jest klasami `opacity-30` i `cursor-default`.
+- **Ekstrakcja tytułu pojedynczego odcinka:** Uodporniono funkcję awaryjnego pobierania metadanych podcastu o sprawdzanie docelowego adresu URL po przekierowaniu 301 (gdy znacznik `og:url` wskazuje na stronę główną).
+
 ## [0.26] - 2026-06-30
 
 ### Dodano

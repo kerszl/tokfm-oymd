@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 from shutil import copyfile,move as movefile
 import json
 import sys
+import html
 from pathlib import Path
 sql_false=0
 
@@ -33,8 +34,8 @@ SEP=os.sep
 #przykladowy link
 #page_link='https://audycje.tokfm.pl/audycja/87,Prawda-Nas-Zaboli?offset=8'
 #page_link='file:///D:/temp/offczarek.html'
-PROGRAM_WERSJA="0.26"
-PROGRAM_DATA="30.06.2026"
+PROGRAM_WERSJA="0.27"
+PROGRAM_DATA="26.09.2026"
 PROGRAM_NAME="tokfm-on-your-mp3-device"
 
 # Ścieżka bazowa do pamięci telefonu zamontowanej w WSL
@@ -123,7 +124,8 @@ def pobierz_soup_strony(audycja_ident, nr_site):
     # Sprawdzamy czy na stronie znajduje się Astro Server Island dla podcastów
     match = re.search(r"(/_server-islands/PodcastsIsland\?[^'\"]+)", html_str)
     if match:
-        island_url = "https://audycje.tokfm.pl" + match.group(1)
+        island_path = html.unescape(match.group(1))
+        island_url = "https://audycje.tokfm.pl" + island_path
         req_island = Request(island_url, headers={'User-Agent': 'Mozilla/5.0'})
         body_island = urlopen(req_island)
         return BeautifulSoup(body_island, 'html.parser')
@@ -135,8 +137,12 @@ def czy_button_next_jest_osiagalny(audycja_ident, nr_strony):
     try:
         soup = pobierz_soup_strony(audycja_ident, nr_strony)
         pagination = soup.find('div', class_="tok-pagination")
-        if pagination and pagination.find("a", {"class": "tok-pagination__button-next"}) is not None:        
-            return True
+        if pagination:
+            next_btn = pagination.find(["a", "button"], class_=re.compile(r"tok-pagination__button-next"))
+            if next_btn:
+                classes = next_btn.get("class", [])
+                if "opacity-30" not in classes and "cursor-default" not in classes and not next_btn.has_attr("disabled"):
+                    return True
     except Exception as e:
         print(f"Błąd w czy_button_next_jest_osiagalny: {e}")
     return False
@@ -645,17 +651,18 @@ def pobierz_i_zgraj_podcast_indywidualny(id_podcast, conn):
     log_info(f"Nie znaleziono podcastu {id_podcast} w bazie. Próbuję pobrać metadane bezpośrednio ze strony...")
     try:
         req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        body = urlopen(req).read()
+        resp = urlopen(req)
+        final_url = resp.geturl()
+        body = resp.read()
         soup = BeautifulSoup(body, 'html.parser')
         
-        # 1. Title (name_podcast) from og:url
+        # 1. Title (name_podcast) from og:url or redirected URL
         url_meta = soup.find('meta', property='og:url')
         podcast_nazwa = ""
-        if url_meta:
-            og_url = url_meta['content']
-            match = re.search(r"podcast/[0-9]+,(.*)", og_url)
-            if match:
-                podcast_nazwa = match.group(1)
+        target_url = url_meta['content'] if url_meta else ""
+        match = re.search(r"podcast/[0-9]+,(.*)", target_url) or re.search(r"podcast/[0-9]+,(.*)", final_url)
+        if match:
+            podcast_nazwa = match.group(1)
         if not podcast_nazwa:
             # Fallback to og:title
             title_meta = soup.find('meta', property='og:title')
