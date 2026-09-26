@@ -68,22 +68,43 @@ Program automatycznie zweryfikuje połączenie, zamontuje pamięć telefonu, prz
 ![Podgląd działania procesu kopiowania](kopiowanie.png)
 
 ### 2. Aktualizacja lokalnej bazy danych podcastów
-Aby zaktualizować lokalną bazę danych SQLite najnowszymi odcinkami ze strony internetowej TOK FM:
+Aby zaktualizować lokalną bazę danych SQLite najnowszymi odcinkami Twoich audycji z pliku `tok-fm-favorite.json`:
 ```bash
-python tokfm-oymd.py update [full/lite] [force/liczba_stron]
+python tokfm-oymd.py update [liczba_stron]
 ```
-* **`full`** – aktualizuje wszystkie audycje zdefiniowane w pliku `tok-fm-full.json`.
-* **`lite`** – aktualizuje tylko wybrane audycje (ulubione) zdefiniowane w pliku `tok-fm-fav.json`.
-* **`force`** – wyłącza domyślne szybkie zatrzymywanie na duplikatach i przeszukuje całą historię stron danej audycji.
-* **`[liczba_stron]`** (np. `5`) – przeszukuje dokładnie zadeklarowaną liczbę stron wstecz, ignorując pojedyncze duplikaty (przydatne do uzupełniania niedawnych braków).
+* *(bez parametrów)* – pobiera najnowsze odcinki dla audycji z pliku `tok-fm-favorite.json` (sprawdza strony wstecz do momentu natrafienia na już znane odcinki).
+* **`[liczba_stron]`** (opcjonalnie, np. `5`) – ogranicza sprawdzanie do podanej liczby stron wstecz.
 
-### 3. Zarządzanie przesłuchanymi audycjami
+#### 🛡️ Awaryjne pobieranie przez Proxy (w razie blokady IP / rate-limitu)
+Jeśli serwery TOK FM tymczasowo nałożą ograniczenie lub blokadę na Twój domowy adres IP, aktualizację można natychmiast wykonać przez lokalne proxy (wykorzystujące polski węzeł wyjściowy Tor + forwarder Privoxy):
+```bash
+HTTP_PROXY=http://127.0.0.1:8118 HTTPS_PROXY=http://127.0.0.1:8118 python tokfm-oymd.py update
+```
+lub alternatywnie:
+```bash
+proxychains4 -q python tokfm-oymd.py update
+```
+
+> [!TIP]
+> Do działania proxy w WSL wymagane są aktywne usługi:
+> * **Tor** (`tor@default` na porcie `9050`) z wpisem `ExitNodes {pl}` w `/etc/tor/torrc` (zapewnia polski adres IP).
+> * **Privoxy** (`privoxy` na porcie `8118`) przekazujący ruch HTTP do portu SOCKS5 Tora.
+
+### 3. Aktualizacja katalogu wszystkich audycji (tok-fm-full.json)
+Gdy w radiu TOK FM pojawią się zupełnie nowe audycje (z nowymi numerami ID), możesz automatycznie zaktualizować plik `tok-fm-full.json`:
+```bash
+python tokfm-oymd.py update_catalog
+```
+*(lub alternatywnie: `python tokfm-oymd.py update catalog`)*
+Program automatycznie sprawdza kolejne numery ID powyżej ostatniego znanego numeru w katalogu, pobiera tytuły nowo utworzonych audycji i dopisuje je na końcu pliku `tok-fm-full.json` (w formacie 1 linii na audycję).
+
+### 4. Zarządzanie przesłuchanymi audycjami
 Weryfikuje stan odsłuchania podcastów i przenosi przesłuchane/nieprzesłuchane odcinki między odpowiednimi katalogami:
 ```bash
 python tokfm-oymd.py move_heard
 ```
 
-### 4. Wyszukiwanie podcastów w bazie danych
+### 5. Wyszukiwanie podcastów w bazie danych
 ```bash
 python tokfm-oymd.py search_podcast
 ```
@@ -91,6 +112,6 @@ python tokfm-oymd.py search_podcast
 ---
 
 ## 📝 Pliki Konfiguracyjne
-* **`tok-fm-fav.json`** – konfiguracja Twoich ulubionych audycji (dla opcji `update lite`).
-* **`tok-fm-full.json`** – konfiguracja wszystkich śledzonych audycji (dla opcji `update full`).
+* **`tok-fm-favorite.json`** – Twoja lista ulubionych audycji do codziennego śledzenia (domyślna dla komendy `update`).
+* **`tok-fm-full.json`** – kompletny katalog wszystkich audycji TOK FM (ponad 530 audycji). Jeśli chcesz zacząć śledzić nową audycję, po prostu skopiuj interesującą Cię linijkę z `tok-fm-full.json` do `tok-fm-favorite.json`!
 * **`tokfm.db`** – lokalna baza SQLite przechowująca metadane wszystkich odcinków.

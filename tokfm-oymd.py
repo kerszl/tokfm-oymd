@@ -12,7 +12,9 @@
 #2026.03.25 - (claude gemini poprawił)
 
 from bs4 import BeautifulSoup
-from urllib.request import urlopen, Request
+from urllib.request import urlopen, Request, build_opener, HTTPRedirectHandler
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse, urlunparse
 from time import sleep
 import re
 import os
@@ -26,6 +28,24 @@ import sys
 import html
 from pathlib import Path
 sql_false=0
+
+class PreserveQueryRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        old_parsed = urlparse(req.full_url)
+        new_parsed = urlparse(newurl)
+        if old_parsed.query and not new_parsed.query:
+            new_url_with_query = urlunparse((
+                new_parsed.scheme,
+                new_parsed.netloc,
+                new_parsed.path,
+                new_parsed.params,
+                old_parsed.query,
+                new_parsed.fragment
+            ))
+            return Request(new_url_with_query, headers=req.headers)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+custom_opener = build_opener(PreserveQueryRedirectHandler)
 
 #system separator
 SEP=os.sep
@@ -43,10 +63,8 @@ SCIEZKA_TELEFONU_BASE = "/mnt/s23/Pamięć wewnętrzna/Android/data/fm.tokfm.and
 
 
 DATABASE_FILE="tokfm.db"
-JSON_FILE_FULL="tok-fm-full.json"
-#JSON_FILE_FULL="tok-fm-full-i-niechciane.json"
-
-JSON_FILE_FAV="tok-fm-fav.json"
+JSON_FILE_FAVORITE="tok-fm-favorite.json"
+JSON_FILE_ALL="tok-fm-full.json"
 
 OFFSET_LINK="?offset="
 MAIN_LINK='https://audycje.tokfm.pl/audycja/'
@@ -93,7 +111,7 @@ def zaladuj_audycje_json(PLIK):
 #-dane do linków audycji są w tok-fm.json
 
 #poprawic to,audycje_link dac  do klasy
-audycje_link = zaladuj_audycje_json(JSON_FILE_FULL)
+audycje_link = zaladuj_audycje_json(JSON_FILE_FAVORITE)
 
 
 # def max_ilosc_stron(audycja_ident):
@@ -115,22 +133,30 @@ audycje_link = zaladuj_audycje_json(JSON_FILE_FULL)
 #     print ("Maxymalny odnosnik to: "+page_link)    
 #     return max_strona    
 
-def pobierz_soup_strony(audycja_ident, nr_site):
+def pobierz_soup_strony(audycja_ident, nr_site, max_retries=3):
     page_link = MAIN_LINK + audycja_ident + OFFSET_LINK + str(nr_site)
-    req = Request(page_link, headers={'User-Agent': 'Mozilla/5.0'})
-    body = urlopen(req).read()
-    html_str = body.decode('utf-8', errors='ignore')
-    
-    # Sprawdzamy czy na stronie znajduje się Astro Server Island dla podcastów
-    match = re.search(r"(/_server-islands/PodcastsIsland\?[^'\"]+)", html_str)
-    if match:
-        island_path = html.unescape(match.group(1))
-        island_url = "https://audycje.tokfm.pl" + island_path
-        req_island = Request(island_url, headers={'User-Agent': 'Mozilla/5.0'})
-        body_island = urlopen(req_island)
-        return BeautifulSoup(body_island, 'html.parser')
-    
-    return BeautifulSoup(body, 'html.parser')
+    last_err = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            req = Request(page_link, headers={'User-Agent': 'Mozilla/5.0'})
+            body = custom_opener.open(req, timeout=15).read()
+            html_str = body.decode('utf-8', errors='ignore')
+            
+            # Sprawdzamy czy na stronie znajduje się Astro Server Island dla podcastów
+            match = re.search(r"(/_server-islands/PodcastsIsland\?[^'\"]+)", html_str)
+            if match:
+                island_path = html.unescape(match.group(1))
+                island_url = "https://audycje.tokfm.pl" + island_path
+                req_island = Request(island_url, headers={'User-Agent': 'Mozilla/5.0'})
+                body_island = custom_opener.open(req_island, timeout=15)
+                return BeautifulSoup(body_island, 'html.parser')
+            
+            return BeautifulSoup(body, 'html.parser')
+        except Exception as e:
+            last_err = e
+            if attempt < max_retries:
+                sleep(2)
+    raise last_err
 
 
 def czy_button_next_jest_osiagalny(audycja_ident, nr_strony):
@@ -303,36 +329,26 @@ class _baza():
 
 
 #------update bazy ze strony-----
-def update_bazy(update_file, max_pages=None):
+def update_bazy(max_pages=None):
+    audycje_link = zaladuj_audycje_json(JSON_FILE_FAVORITE)
+    nowe_audycje_licznik = 0
 
-    if (update_file=="full"):
-        update_file_=JSON_FILE_FULL
-
-    if (update_file=="lite"):
-        update_file_=JSON_FILE_FAV  
-        
-    audycje_link = zaladuj_audycje_json(update_file_)
-    
-    nowe_audycje_licznik=0
-
-
-    sciezka=Path(DATABASE_FILE)
+    sciezka = Path(DATABASE_FILE)
     if not sciezka.exists():
-        log_error("Brak pliku bazy danych: "+DATABASE_FILE)
+        log_error("Brak pliku bazy danych: " + DATABASE_FILE)
         exit()
         
-    
     conn = sqlite3.connect(DATABASE_FILE)    
     cur = conn.cursor()
 
-    log_info(f"Rozpoczynam aktualizację bazy danych ({update_file})...")
+    log_info("Rozpoczynam aktualizację bazy danych (tok-fm-favorite.json)...")
 
     for audycja in audycje_link:
         log_info(f"Sprawdzam nowości w audycji: {audycje_link[audycja][1]}...")
         Update=True
         i=1        
         while Update:            
-            if max_pages is not None and max_pages != "force" and i > max_pages:
+            if max_pages is not None and i > max_pages:
                 break
             audycje_wiersze=zgraj_strone_audycji(audycje_link[audycja][0],i)
             i+=1
@@ -341,14 +357,14 @@ def update_bazy(update_file, max_pages=None):
             
             all_exist_on_page = True
             for aud in audycje_wiersze:                        
-                cur.execute("SELECT id_podcast,date_podcast FROM tokfm where id_podcast = "+aud)
+                cur.execute("SELECT id_podcast, date_podcast FROM tokfm WHERE id_podcast = ?", (int(aud),))
                 rows = cur.fetchone()
                 if not rows:
                     all_exist_on_page = False
                     log_success(f"Dodano do bazy: {audycje_wiersze[aud][1]} | {audycje_wiersze[aud][4]} | {audycje_wiersze[aud][3]}")
                     sql_false=0                
-                    id_podcast_=aud                                
-                    id_audition_=audycje_wiersze[aud][0]
+                    id_podcast_=int(aud)                                
+                    id_audition_=int(audycje_wiersze[aud][0])
                     name_audition_=audycje_wiersze[aud][1]
                     name_podcast_=audycje_wiersze[aud][3]
                     date_podcast_=audycje_wiersze[aud][4]
@@ -356,24 +372,112 @@ def update_bazy(update_file, max_pages=None):
                     date_index_=audycje_wiersze[aud][6]
                     podcast_heard_=sql_false
                     guest_podcast_=audycje_wiersze[aud][7]
-                    #cur.execute("INSERT OR IGNORE INTO tokfm (id_podcast,name_podcast,id_audition,name_audition,
                     cur.execute("INSERT OR IGNORE INTO tokfm (id_podcast,name_podcast,id_audition,name_audition,\
                             date_podcast,during_podcast,date_index,podcast_heard,guest_podcast) VALUES(?,?,?,?,?,?,?,?,?)",\
                             (id_podcast_,name_podcast_,id_audition_,name_audition_,date_podcast_,during_podcast_,date_index_,podcast_heard_,guest_podcast_))
                     conn.commit()                
                     nowe_audycje_licznik+=1
-                else:
-                    if max_pages is None and audycje_wiersze[aud][4]==rows[1]:
-                        Update=False
-                        break
+            
+            # W trybie standardowym (bez force i bez limitu stron) przerywamy przeszukiwanie danej audycji,
+            # gdy CAŁA strona zawiera wyłącznie odcinki, które już były zapisane w bazie
+            if max_pages is None and all_exist_on_page:
+                Update = False
     cur.close()
     conn.close()
 #idioctwo, dac do klasy    
-    audycje_link = zaladuj_audycje_json(JSON_FILE_FULL)
+    audycje_link = zaladuj_audycje_json(JSON_FILE_FAVORITE)
     log_success(f"Aktualizacja zakończona. Dodano nowych odcinków: {nowe_audycje_licznik}")
 
 
-#--Zgrywanie ze strony do bazy (full) Robi się tylko 1 audycje raz
+def zapisz_katalog_full(full):
+    sorted_items = sorted(full.items(), key=lambda item: int(item[1][0].split(',')[0]))
+    lines = ['{']
+    for i, (k, v) in enumerate(sorted_items):
+        sep = ',' if i < len(sorted_items) - 1 else ''
+        line = f'{json.dumps(k, ensure_ascii=False)}:[{json.dumps(v[0], ensure_ascii=False)},{json.dumps(v[1], ensure_ascii=False)}]{sep}'
+        lines.append(line)
+    lines.append('}\n')
+    with open(JSON_FILE_ALL, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines))
+
+
+def update_katalogu():
+    log_info(f"Wczytuję katalog audycji z {JSON_FILE_ALL}...")
+    full = zaladuj_audycje_json(JSON_FILE_ALL)
+    
+    # Znajdź najwyższy numer ID w pliku
+    id_list = []
+    for k, v in full.items():
+        try:
+            aid = int(v[0].split(',')[0])
+            id_list.append(aid)
+        except Exception:
+            pass
+            
+    if not id_list:
+        max_id = 0
+    else:
+        max_id = max(id_list)
+        
+    log_info(f"Najwyższy znany numer audycji w {JSON_FILE_ALL}: {max_id}")
+    log_info("Sprawdzam czy na stronie TOK FM pojawiły się nowe audycje...")
+    
+    curr_id = max_id + 1
+    consecutive_404 = 0
+    max_consecutive_404 = 5
+    nowe_audycje = []
+    
+    while consecutive_404 < max_consecutive_404:
+        print(f"\r[*] Sprawdzam ID {curr_id} (oczekiwanie na koniec: {consecutive_404}/{max_consecutive_404} pustych)...", end="", flush=True)
+        url = f"{MAIN_LINK}{curr_id}"
+        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        try:
+            resp = custom_opener.open(req, timeout=12)
+            final_url = resp.geturl()
+            m_slug = re.search(r'/audycja/(\d+),([^/?#]+)', final_url)
+            if m_slug:
+                aid_found = int(m_slug.group(1))
+                slug = m_slug.group(2)
+                raw = resp.read(15000).decode('utf-8', errors='ignore')
+                m_title = re.search(r'<title>([^<]+)</title>', raw)
+                title = slug
+                if m_title:
+                    t = html.unescape(m_title.group(1))
+                    t = re.sub(r'^(?:Audycja|Podcast):\s*', '', t, flags=re.I)
+                    t = re.sub(r'\s*-\s*słuchaj podcastów TOK FM.*', '', t, flags=re.I)
+                    t = re.sub(r'\s*[|\-]\s*TOK FM.*', '', t, flags=re.I)
+                    title = t.strip()
+                
+                key = slug
+                if key in full:
+                    key = f"{slug}-{aid_found}"
+                    
+                wpis = [f"{aid_found},{slug}", title]
+                full[key] = wpis
+                nowe_audycje.append((key, wpis))
+                zapisz_katalog_full(full)
+                print()
+                log_success(f"Znaleziono i dopisano do {JSON_FILE_ALL}: ID {aid_found} - '{title}' (klucz: {key})")
+                consecutive_404 = 0
+            else:
+                consecutive_404 += 1
+        except HTTPError as e:
+            if e.code == 404:
+                consecutive_404 += 1
+            else:
+                consecutive_404 += 1
+        except Exception:
+            consecutive_404 += 1
+            
+        curr_id += 1
+        sleep(1)
+        
+    print()
+    if nowe_audycje:
+        log_success(f"Zakończono sprawdzanie katalogu. Łącznie dopisano {len(nowe_audycje)} nowych audycji.")
+        log_info("Możesz teraz skopiować interesujące Cię linie do pliku tok-fm-favorite.json.")
+    else:
+        log_info(f"Brak nowych audycji w serwisie TOK FM (sprawdzono do ID {curr_id - 1}). Katalog jest aktualny.")
 #mniej polaczen zrobic, zaktualizować
 
 
@@ -865,7 +969,8 @@ def drukuj_nazwe_programu ():
 
 def wyswietl_pomoc ():
     print ("Proszę podać parametr \n")
-    print ("update [full/lite] [force/liczba_stron] - Aktualizuje baze podcastów ze strony (domyślnie zatrzymuje na pierwszym duplikacie, 'force' wymusza przeszukanie do końca, liczba ogranicza ilość sprawdzanych stron)")
+    print ("update [liczba_stron] - Aktualizuje bazę podcastów ze strony (plik tok-fm-favorite.json, opcjonalna liczba ogranicza ilość sprawdzanych stron)")
+    print ("update_catalog - Sprawdza czy w serwisie TOK FM pojawiły się nowe audycje i dopisuje je do pliku tok-fm-full.json")
     print ('kopiuj - Kopiuje nowe podcasty z podłączonego telefonu, zmienia nazwy i kataloguje na dysku')
     print ("search_podcast - Szuka podcasty")    
     print ("move_heard - Sprawdza czy audycje były przesłuchane i je przenosi")
@@ -887,56 +992,50 @@ def nazwa_parametru():
     return parametry
 
 #-----Poczatek programu----
-drukuj_nazwe_programu()
-parametr_name=nazwa_parametru()
+if __name__ == '__main__':
+    drukuj_nazwe_programu()
+    parametr_name=nazwa_parametru()
 
-
-
-if not parametr_name:
-    wyswietl_pomoc()
-else:
-    if parametr_name[0] =="update":
-        if len(parametr_name)>1:
-            max_pages = None
-            if len(parametr_name) > 2:
-                val = parametr_name[2]
-                if val.isdigit():
-                    max_pages = int(val)
-                elif val == "force":
-                    max_pages = "force"
-                else:
-                    print("Błędny parametr limitu stron. Użyj 'force' lub liczby całkowitej (np. 5).")
-                    exit()
-            
-            if parametr_name[1] =="full":
-                update_bazy("full", max_pages)
-            elif parametr_name[1] =="lite":
-                update_bazy("lite", max_pages)
-            else:
-                print ("Wybierz: full lub lite")
-                exit()
-        else:
-            print ("Wybierz: full lub lite")
-            exit()
-
-
-    if parametr_name[0] in ["kopiuj", "fix_names"]:        
-        szukaj_na_dysku()        
-        szukaj_w_bazie_i_zgraj()
-
-    if parametr_name[0] =="search_podcast":
-        szukaj_i_wyswietl(" ".join(parametr_name))        
-            
-    if parametr_name[0] =="move_heard":
-        print ("Sprawdzam w podkastach: Przesluchane")
-        szukaj_w_bazie_i_katalogu(katalog_tok_fm_podcasty_result_dir_przesluchane,katalog_tok_fm_podcasty_result_dir_nieprzesluchane)
-        print ("Sprawdzam w podkastach: NiePrzesluchane")
-        szukaj_w_bazie_i_katalogu(katalog_tok_fm_podcasty_result_dir_nieprzesluchane,katalog_tok_fm_podcasty_result_dir_przesluchane)
-
-
-    
-    if parametr_name[0] =="help":
+    if not parametr_name:
         wyswietl_pomoc()
+    else:
+        if parametr_name[0] in ["update_catalog", "update-catalog", "update_katalog"]:
+            update_katalogu()
+
+        elif parametr_name[0] =="update":
+            if len(parametr_name) > 1 and parametr_name[1] in ["catalog", "katalog"]:
+                update_katalogu()
+            else:
+                max_pages = None
+                args = parametr_name[1:]
+                
+                for arg in args:
+                    if arg.isdigit():
+                        max_pages = int(arg)
+                    else:
+                        print(f"Błędny parametr '{arg}'. Użyj: update [liczba_stron] lub update_catalog")
+                        exit()
+                
+                update_bazy(max_pages)
+
+
+        if parametr_name[0] in ["kopiuj", "fix_names"]:        
+            szukaj_na_dysku()        
+            szukaj_w_bazie_i_zgraj()
+
+        if parametr_name[0] =="search_podcast":
+            szukaj_i_wyswietl(" ".join(parametr_name))        
+                
+        if parametr_name[0] =="move_heard":
+            print ("Sprawdzam w podkastach: Przesluchane")
+            szukaj_w_bazie_i_katalogu(katalog_tok_fm_podcasty_result_dir_przesluchane,katalog_tok_fm_podcasty_result_dir_nieprzesluchane)
+            print ("Sprawdzam w podkastach: NiePrzesluchane")
+            szukaj_w_bazie_i_katalogu(katalog_tok_fm_podcasty_result_dir_nieprzesluchane,katalog_tok_fm_podcasty_result_dir_przesluchane)
+
+
+        
+        if parametr_name[0] =="help":
+            wyswietl_pomoc()
                 
 
 #Parametr dla doswiadczonych, zgrywa wszystkie podcasty z audycji
